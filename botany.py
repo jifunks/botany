@@ -1,5 +1,6 @@
-import pickle
+from __future__ import division
 import time
+import pickle
 import curses
 import json
 import math
@@ -56,16 +57,32 @@ class Plant:
 
     def rarity_check(self):
         # todo: split this by math not literals
-        rare_seed = random.randint(0,127)
-        if 0<= rare_seed <= 63:
+        CONST_RARITY_MAX = 256.0
+        rare_seed = random.randint(1,CONST_RARITY_MAX)
+        common_range =    round((2/3)*CONST_RARITY_MAX)
+        uncommon_range =  round((2/3)*(CONST_RARITY_MAX-common_range))
+        rare_range =      round((2/3)*(CONST_RARITY_MAX-common_range-uncommon_range))
+        legendary_range = round((2/3)*(CONST_RARITY_MAX-common_range-uncommon_range-rare_range))
+        godly_range =     round((2/3)*(CONST_RARITY_MAX-common_range-uncommon_range-rare_range-legendary_range))
+
+        # print common_range, uncommon_range, rare_range, legendary_range, godly_range
+
+        common_max = common_range
+        uncommon_max = common_max + uncommon_range
+        rare_max = uncommon_max + rare_range
+        legendary_max = rare_max + legendary_range
+        godly_max = legendary_max + godly_range
+
+        # print common_max, uncommon_max, rare_max, legendary_max, godly_max
+        if   0 <= rare_seed <= common_max:
             rarity = 0
-        elif 64 <= rare_seed <= 95:
+        elif common_max < rare_seed <= uncommon_max:
             rarity = 1
-        elif 96 <= rare_seed <= 111:
+        elif uncommon_max < rare_seed <= rare_max:
             rarity = 2
-        elif 112 <= rare_seed <= 123:
+        elif rare_max < rare_seed <= legendary_max:
             rarity = 3
-        elif 124 <= rare_seed <= 127:
+        elif legendary_max < rare_seed <= CONST_RARITY_MAX:
             rarity = 4
         return rarity
 
@@ -73,9 +90,9 @@ class Plant:
         if self.stage < 6:
             self.stage += 1
             # do stage growth stuff
-            MUTATION_RARITY = 9
-            mutation_seed = random.randint(0,MUTATION_RARITY)
-            if mutation_seed == MUTATION_RARITY:
+            CONST_MUTATION_RARITY = 9
+            mutation_seed = random.randint(0,CONST_MUTATION_RARITY)
+            if mutation_seed == CONST_MUTATION_RARITY:
                 mutation = random.randint(0,3)
                 if self.mutation == 0:
                     self.mutation = mutation
