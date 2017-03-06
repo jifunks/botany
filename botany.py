@@ -48,15 +48,63 @@ import threading
 
 
 class Plant:
+    stage_dict = {
+        0: 'seed',
+        1: 'seedling',
+        2: 'young',
+        3: 'grown',
+        4: 'mature',
+        5: 'flowering',
+        6: 'fruiting',
+    }
+
+    color_dict = {
+        0: 'red',
+        1: 'orange',
+        2: 'yellow',
+        3: 'green',
+        4: 'blue',
+        5: 'indigo',
+        6: 'violet',
+        7: 'white',
+        8: 'black',
+        9: 'gold',
+        10: 'rainbow',
+    }
+
+    rarity_dict = {
+        0: 'common',
+        1: 'uncommon',
+        2: 'rare',
+        3: 'legendary',
+        4: 'godly',
+    }
+
+    species_dict = {
+        0: 'poppy',
+        1: 'cactus',
+        2: 'aloe',
+        3: 'venus flytrap',
+        4: 'cherry tree',
+        5: 'fern',
+    }
+
+    mutation_dict = {
+        0: '',
+        1: 'humming',
+        2: 'noxious',
+        3: 'vorpal',
+        4: 'glowing'
+    }
+
     def __init__(self):
         self.stage = 0
         self.mutation = 0
-        self.species = random.randint(0,5)
-        self.color = random.randint(0,10)
+        self.species = random.randint(0,len(self.species_dict)-1)
+        self.color = random.randint(0,len(self.mutation_dict)-1)
         self.rarity = self.rarity_check()
 
     def rarity_check(self):
-        # todo: split this by math not literals
         CONST_RARITY_MAX = 256.0
         rare_seed = random.randint(1,CONST_RARITY_MAX)
         common_range =    round((2/3)*CONST_RARITY_MAX)
@@ -87,78 +135,29 @@ class Plant:
         return rarity
 
     def growth(self):
-        if self.stage < 6:
+        if self.stage < 7:
             self.stage += 1
             # do stage growth stuff
-            CONST_MUTATION_RARITY = 9
+            CONST_MUTATION_RARITY = 9 # Increase this # to make mutation rarer (chance 1 out of x)
             mutation_seed = random.randint(0,CONST_MUTATION_RARITY)
             if mutation_seed == CONST_MUTATION_RARITY:
-                mutation = random.randint(0,3)
+                mutation = random.randint(0,len(self.mutation_dict)-1)
                 if self.mutation == 0:
                     self.mutation = mutation
         else:
             # do stage 5 stuff (after fruiting)
             1==1
     def parse_plant(self):
-        stage_dict = {
-            0: 'seed',
-            1: 'seedling',
-            2: 'young',
-            3: 'grown',
-            4: 'mature',
-            5: 'flowering',
-            6: 'fruiting',
-        }
-
-        color_dict = {
-            0: 'red',
-            1: 'orange',
-            2: 'yellow',
-            3: 'green',
-            4: 'blue',
-            5: 'indigo',
-            6: 'violet',
-            7: 'white',
-            8: 'black',
-            9: 'gold',
-            10: 'rainbow',
-        }
-
-        rarity_dict = {
-            0: 'common',
-            1: 'uncommon',
-            2: 'rare',
-            3: 'legendary',
-            4: 'godly',
-        }
-
-        species_dict = {
-            0: 'poppy',
-            1: 'cactus',
-            2: 'aloe',
-            3: 'rose',
-            4: 'cherry tree',
-            5: 'fern',
-        }
-
-        mutation_dict = {
-            0: '',
-            1: 'humming',
-            2: 'poisonous',
-            3: 'vorpal',
-            4: 'glowing'
-        }
         if self.mutation == 0:
-            print rarity_dict[self.rarity] +" "+ color_dict[self.color] +" "+ stage_dict[self.stage] +" "+ species_dict[self.species]
+            print self.rarity_dict[self.rarity] +" "+ self.color_dict[self.color] +" "+ self.stage_dict[self.stage] +" "+ self.species_dict[self.species]
         else:
-            print rarity_dict[self.rarity] +" "+ mutation_dict[self.mutation] +" "+ color_dict[self.color] +" "+ stage_dict[self.stage] +" "+ species_dict[self.species]
+            print self.rarity_dict[self.rarity] +" "+ self.mutation_dict[self.mutation] +" "+ self.color_dict[self.color] +" "+ self.stage_dict[self.stage] +" "+ self.species_dict[self.species]
 
 if __name__ == '__main__':
     my_plant = Plant()
-    print my_plant.stage, my_plant.species, my_plant.color, my_plant.rarity
-    while my_plant.stage < 6:
+    print my_plant.stage, my_plant.species, my_plant.color, my_plant.rarity, my_plant.mutation
+    while my_plant.stage < 7:
         raw_input("...")
-        my_plant.growth()
         my_plant.parse_plant()
-
+        my_plant.growth()
     print "end"
