@@ -52,10 +52,9 @@ class Plant:
         0: 'seed',
         1: 'seedling',
         2: 'young',
-        3: 'grown',
-        4: 'mature',
-        5: 'flowering',
-        6: 'fruiting',
+        3: 'mature',
+        4: 'flowering',
+        5: 'fruiting',
     }
 
     color_dict = {
@@ -87,6 +86,7 @@ class Plant:
         3: 'venus flytrap',
         4: 'cherry tree',
         5: 'fern',
+        6: 'daffodil',
     }
 
     mutation_dict = {
@@ -94,7 +94,12 @@ class Plant:
         1: 'humming',
         2: 'noxious',
         3: 'vorpal',
-        4: 'glowing'
+        4: 'glowing',
+        5: 'electric',
+        6: 'freezing',
+        7: 'flaming',
+        8: 'psychic',
+        9: 'screaming'
     }
 
     def __init__(self):
@@ -135,7 +140,7 @@ class Plant:
         return rarity
 
     def growth(self):
-        if self.stage < 7:
+        if self.stage < len(self.stage_dict):
             self.stage += 1
             # do stage growth stuff
             CONST_MUTATION_RARITY = 9 # Increase this # to make mutation rarer (chance 1 out of x)
@@ -156,7 +161,7 @@ class Plant:
 if __name__ == '__main__':
     my_plant = Plant()
     print my_plant.stage, my_plant.species, my_plant.color, my_plant.rarity, my_plant.mutation
-    while my_plant.stage < 7:
+    while my_plant.stage < len(my_plant.stage_dict):
         raw_input("...")
         my_plant.parse_plant()
         my_plant.growth()
