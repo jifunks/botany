@@ -7,6 +7,7 @@ import math
 import os.path
 import random
 import threading
+import getpass
 
 # ideas go here
 # lifecycle of a plant
@@ -53,7 +54,7 @@ import threading
 #     curses.endwin()
 
 
-class Plant:
+class Plant(object):
     stage_dict = {
         0: 'seed',
         1: 'seedling',
@@ -180,21 +181,60 @@ class Plant:
         # life_stages = (5, 15, 30, 45, 60)
         life_stages = (5, 10, 15, 20, 25)
         self.parse_plant()
-        while self.ticks <= 100:
-            time.sleep(1)
-            self.ticks += 1
-            print self.ticks
-            if self.stage < len(self.stage_dict)-1:
-                if self.ticks == life_stages[self.stage]:
-                    self.growth()
-                    self.parse_plant()
+        # while self.ticks <= 100:
+        #     time.sleep(1)
+        #     self.ticks += 1
+        #     # print self.ticks
+        #     if self.stage < len(self.stage_dict)-1:
+        #         if self.ticks == life_stages[self.stage]:
+        #             self.growth()
+        #             self.parse_plant()
+
+        ## DEBUG:
+        while my_plant.stage < len(my_plant.stage_dict)-1:
+            raw_input("...")
+            my_plant.growth()
+            my_plant.parse_plant()
+
+class DataManager(object):
+    def __init__(self):
+        self.this_user = getpass.getuser()
+        self.savefile_name = self.this_user + '_plant.dat'
+
+
+    def check_plant(self):
+        if os.path.isfile(self.savefile_name):
+            print "found savefile!"
+            return True
+        else:
+            print "no savefile found"
+            return False
+
+    def save_plant(self, this_plant):
+        with open(self.savefile_name, 'wb') as f:
+            pickle.dump(this_plant, f, protocol=2)
+
+    def load_plant(self):
+        with open(self.savefile_name, 'rb') as f:
+            this_plant = pickle.load(f)
+            return this_plant
+
+    def data_write_json(self, this_plant):
+        json_filename = self.this_user + '_plant_data.json'
+        with open(json_filename, 'w') as outfile:
+            json.dump(this_plant.__dict__, outfile)
 
 if __name__ == '__main__':
-    my_plant = Plant()
+    my_data = DataManager()
+    # if plant save file does not exist
+    if my_data.check_plant():
+        my_plant = my_data.load_plant()
+    # otherwise create new plant
+    else:
+        my_plant = Plant()
+
     print my_plant.stage, my_plant.species, my_plant.color, my_plant.rarity, my_plant.mutation
-    # while my_plant.stage < len(my_plant.stage_dict):
-    #     raw_input("...")
-    #     my_plant.parse_plant()
-    #     my_plant.growth()
     my_plant.live()
+    my_data.save_plant(my_plant)
+    my_data.data_write_json(my_plant)
     print "end"
