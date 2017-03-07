@@ -171,36 +171,43 @@ class Plant(object):
             # do stage 5 stuff (after fruiting)
             1==1
     def parse_plant(self):
-        if self.mutation == 0:
-            print self.rarity_dict[self.rarity] +" "+ self.color_dict[self.color] +" "+ self.stage_dict[self.stage] +" "+ self.species_dict[self.species]
-        else:
-            print self.rarity_dict[self.rarity] +" "+ self.mutation_dict[self.mutation] +" "+ self.color_dict[self.color] +" "+ self.stage_dict[self.stage] +" "+ self.species_dict[self.species]
+        output = ""
+        output += self.rarity_dict[self.rarity] + " "
+        if self.mutation != 0:
+            output += self.mutation_dict[self.mutation] + " "
+        if self.stage >= 4:
+            output += self.color_dict[self.color] + " "
+        output += self.stage_dict[self.stage] + " "
+        if self.stage >= 2:
+            output += self.species_dict[self.species] + " "
+        print output
 
     def live(self):
         # I've created life :)
         # life_stages = (5, 15, 30, 45, 60)
-        life_stages = (5, 10, 15, 20, 25)
+        life_stages = (1, 2, 3, 4, 5)
         self.parse_plant()
-        # while self.ticks <= 100:
-        #     time.sleep(1)
-        #     self.ticks += 1
-        #     # print self.ticks
-        #     if self.stage < len(self.stage_dict)-1:
-        #         if self.ticks == life_stages[self.stage]:
-        #             self.growth()
-        #             self.parse_plant()
+        while self.stage < 5:
+            time.sleep(1)
+            self.ticks += 1
+            # print self.ticks
+            if self.stage < len(self.stage_dict)-1:
+                if self.ticks == life_stages[self.stage]:
+                    self.growth()
+                    self.parse_plant()
+
+        raw_input("...")
 
         ## DEBUG:
-        while my_plant.stage < len(my_plant.stage_dict)-1:
-            raw_input("...")
-            my_plant.growth()
-            my_plant.parse_plant()
+        # while my_plant.stage < len(my_plant.stage_dict)-1:
+        #     raw_input("...")
+        #     my_plant.growth()
+        #     my_plant.parse_plant()
 
 class DataManager(object):
     def __init__(self):
         self.this_user = getpass.getuser()
         self.savefile_name = self.this_user + '_plant.dat'
-
 
     def check_plant(self):
         if os.path.isfile(self.savefile_name):
@@ -233,7 +240,7 @@ if __name__ == '__main__':
     else:
         my_plant = Plant()
 
-    print my_plant.stage, my_plant.species, my_plant.color, my_plant.rarity, my_plant.mutation
+    # print my_plant.stage, my_plant.species, my_plant.color, my_plant.rarity, my_plant.mutation
     my_plant.live()
     my_data.save_plant(my_plant)
     my_data.data_write_json(my_plant)
