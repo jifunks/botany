@@ -19,12 +19,18 @@ import threading
 
 # development plan
 # build plant lifecycle just stepping through
-#   What else should it do during life? growth alone is not all that
+#   - What else should it do during life? growth alone is not all that
 #   interesting.
-#   how long should each stage last ? thinking realistic lmao
+#   - how long should each stage last ? thinking realistic lmao
+
+# interaction
+#   - watering?
+#   - look at plant, how do you feel?
+#   - fertilize?
 
 # build time system
 # build persistence across sessions
+
 # build ascii trees
 # build gui?
 
@@ -84,7 +90,7 @@ class Plant:
         1: 'cactus',
         2: 'aloe',
         3: 'venus flytrap',
-        4: 'cherry tree',
+        4: 'jade plant',
         5: 'fern',
         6: 'daffodil',
     }
@@ -96,18 +102,29 @@ class Plant:
         3: 'vorpal',
         4: 'glowing',
         5: 'electric',
-        6: 'freezing',
+        6: 'icy',
         7: 'flaming',
         8: 'psychic',
-        9: 'screaming'
+        9: 'screaming',
+        10: 'chaos',
+        11: 'hissing',
+        12: 'gelatinous',
+        13: 'deformed',
+        14: 'shaggy',
+        15: 'scaly',
+        16: 'depressed',
+        17: 'anxious',
+        18: 'metallic',
+        19: 'glossy',
     }
 
     def __init__(self):
         self.stage = 0
         self.mutation = 0
         self.species = random.randint(0,len(self.species_dict)-1)
-        self.color = random.randint(0,len(self.mutation_dict)-1)
+        self.color = random.randint(0,len(self.color_dict)-1)
         self.rarity = self.rarity_check()
+        self.ticks = 0
 
     def rarity_check(self):
         CONST_RARITY_MAX = 256.0
@@ -140,7 +157,7 @@ class Plant:
         return rarity
 
     def growth(self):
-        if self.stage < len(self.stage_dict):
+        if self.stage < (len(self.stage_dict)-1):
             self.stage += 1
             # do stage growth stuff
             CONST_MUTATION_RARITY = 9 # Increase this # to make mutation rarer (chance 1 out of x)
@@ -158,11 +175,26 @@ class Plant:
         else:
             print self.rarity_dict[self.rarity] +" "+ self.mutation_dict[self.mutation] +" "+ self.color_dict[self.color] +" "+ self.stage_dict[self.stage] +" "+ self.species_dict[self.species]
 
+    def live(self):
+        # I've created life :)
+        # life_stages = (5, 15, 30, 45, 60)
+        life_stages = (5, 10, 15, 20, 25)
+        self.parse_plant()
+        while self.ticks <= 100:
+            time.sleep(1)
+            self.ticks += 1
+            print self.ticks
+            if self.stage < len(self.stage_dict)-1:
+                if self.ticks == life_stages[self.stage]:
+                    self.growth()
+                    self.parse_plant()
+
 if __name__ == '__main__':
     my_plant = Plant()
     print my_plant.stage, my_plant.species, my_plant.color, my_plant.rarity, my_plant.mutation
-    while my_plant.stage < len(my_plant.stage_dict):
-        raw_input("...")
-        my_plant.parse_plant()
-        my_plant.growth()
+    # while my_plant.stage < len(my_plant.stage_dict):
+    #     raw_input("...")
+    #     my_plant.parse_plant()
+    #     my_plant.growth()
+    my_plant.live()
     print "end"
