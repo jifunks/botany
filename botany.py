@@ -6,8 +6,9 @@ import json
 import math
 import os.path
 import random
-import threading
 import getpass
+import threading
+
 
 # ideas go here
 # lifecycle of a plant
@@ -52,7 +53,6 @@ import getpass
 #     myscreen.getch()
 #
 #     curses.endwin()
-
 
 class Plant(object):
     stage_dict = {
@@ -126,6 +126,7 @@ class Plant(object):
         self.color = random.randint(0,len(self.color_dict)-1)
         self.rarity = self.rarity_check()
         self.ticks = 0
+        self.dead = False
 
     def rarity_check(self):
         CONST_RARITY_MAX = 256.0
@@ -182,21 +183,30 @@ class Plant(object):
             output += self.species_dict[self.species] + " "
         print output
 
-    def live(self):
+    def start_life(self):
+        # runs forever
+       thread = threading.Thread(target=self.life, args=())
+       thread.daemon = True
+       thread.start()
+
+    def life(self):
         # I've created life :)
         # life_stages = (5, 15, 30, 45, 60)
         life_stages = (1, 2, 3, 4, 5)
-        self.parse_plant()
-        while self.stage < 5:
+        # TODO: stopped here 3/6 evening
+        # leave this untouched bc it works for now
+        while (self.stage < 5) or (self.dead == False):
             time.sleep(1)
             self.ticks += 1
-            # print self.ticks
+            print self.ticks
             if self.stage < len(self.stage_dict)-1:
                 if self.ticks == life_stages[self.stage]:
                     self.growth()
                     self.parse_plant()
 
-        raw_input("...")
+        # raw_input("...")
+
+        # what kills the plant?
 
         ## DEBUG:
         # while my_plant.stage < len(my_plant.stage_dict)-1:
@@ -231,17 +241,21 @@ class DataManager(object):
         with open(json_filename, 'w') as outfile:
             json.dump(this_plant.__dict__, outfile)
 
+
 if __name__ == '__main__':
     my_data = DataManager()
     # if plant save file does not exist
     if my_data.check_plant():
         my_plant = my_data.load_plant()
+        my_plant.parse_plant()
     # otherwise create new plant
     else:
         my_plant = Plant()
 
     # print my_plant.stage, my_plant.species, my_plant.color, my_plant.rarity, my_plant.mutation
-    my_plant.live()
+    my_plant.start_life()
+    print "Thread's running!"
+    raw_input('...')
     my_data.save_plant(my_plant)
     my_data.data_write_json(my_plant)
     print "end"
