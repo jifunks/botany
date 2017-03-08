@@ -27,12 +27,12 @@ from menu_screen import *
 #   - watering?
 #   - look at plant, how do you feel? (also gets rid of pests)
 #
-# if >5 days with no water, plant dies
 # events
 # - heatwave
 # - rain
 # - bugs
 #
+# build multiplayer
 # neighborhood system
 # - create plant id (sort of like userid)
 # - list sorted by plantid that wraps so everybody has 2 neighbors :)
@@ -44,13 +44,9 @@ from menu_screen import *
 # garden system
 # - can plant your plant in the garden to start a new plant
 
-# build time system
-# build persistence across sessions
-
 # build ascii trees
-# build gui?
 
-# build multiplayer
+
 
 # def display_update:
 #     myscreen = curses.initscr()
