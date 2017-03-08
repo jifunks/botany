@@ -147,7 +147,8 @@ class Plant(object):
         self.file_name = this_filename
         self.start_time = int(time.time())
         self.last_time = int(time.time())
-        self.watered_date = 0
+        self.watered_date = datetime.datetime.fromtimestamp(0)
+        self.watered_times = 0
 
     def rarity_check(self):
         # Generate plant rarity
@@ -192,6 +193,7 @@ class Plant(object):
     def water(self):
         # Increase plant growth stage
         self.watered_date = datetime.datetime.now().date()
+        self.watered_times += 1
 
     def mutate_check(self):
         # Create plant mutation
@@ -233,15 +235,15 @@ class Plant(object):
     def life(self):
         # I've created life :)
         # TODO: change out of debug
-        # life_stages = (5, 15, 30, 45, 60)
-        life_stages = (1, 2, 3, 4, 5)
+        life_stages = (5, 15, 30, 45, 60)
+        # life_stages = (1, 2, 3, 4, 5)
         # leave this untouched bc it works for now
         while (self.stage < 5) or (self.dead == False):
             time.sleep(1)
             self.ticks += 1
             # print self.ticks
             if self.stage < len(self.stage_dict)-1:
-                if self.ticks == life_stages[self.stage]:
+                if self.ticks >= life_stages[self.stage]:
                     self.growth()
                     #print self.parse_plant()
             if self.mutate_check():
@@ -291,9 +293,26 @@ class DataManager(object):
 
     def load_plant(self):
         # load savefile
+        # need to calculate lifetime ticks to determine stage of life
         with open(self.savefile_path, 'rb') as f:
             this_plant = pickle.load(f)
-            return this_plant
+
+        current_timestamp = int(time.time())
+        current_date = datetime.datetime.now().date()
+
+        # i wonder if this is a better way to calculate ticks age?
+        time_delta_overall = current_timestamp - this_plant.start_time
+        # TODO: this needs to check the current ticks w/ life stage 
+        # compare timestamp of signout to timestamp now
+        time_delta_last = current_timestamp - this_plant.last_time
+        time_delta_watered = int((current_date - this_plant.watered_date).days)
+
+        # if it has been >5 days since watering, sorry plant is dead :(
+        if time_delta_watered > 5:
+            this_plant.dead = True
+
+        this_plant.ticks += time_delta_last
+        return this_plant
 
     def data_write_json(self, this_plant):
         # create json file for user to use outside of the game (website?)
@@ -301,19 +320,6 @@ class DataManager(object):
         json_file = os.path.join(self.botany_dir,self.this_user + '_plant_data.json')
         with open(json_file, 'w') as outfile:
             json.dump(this_plant.__dict__, outfile)
-
-    def whats_happened(self,this_plant):
-        # need to calculate lifetime ticks to determine stage of life
-        # need to calculate if it's been too long since it's watered
-        current_timestamp = int(time.time())
-        current_date = datetime.datetime.now().date()
-
-        time_delta_overall = current_timestamp - this_plant.start_time
-        time_delta_last = current_timestamp - this_plant.last_time
-        time_delta_watered = (current_date - this_plant.watered_date).days
-        # compare timestamp of signout to timestamp now
-        # need to create timestamps to begin with..
-        # create plant birthday = unix datetime
 
 if __name__ == '__main__':
     my_data = DataManager()
