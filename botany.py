@@ -1,7 +1,6 @@
 from __future__ import division
 import time
 import pickle
-import curses
 import json
 import math
 import os.path
@@ -145,7 +144,10 @@ class Plant(object):
         self.rarity = self.rarity_check()
         self.ticks = 0
         self.dead = False
-        self.filename = this_filename
+        self.file_name = this_filename
+        self.start_time = int(time.time())
+        self.last_time = int(time.time())
+        self.watered_date = 0
 
     def rarity_check(self):
         # Generate plant rarity
@@ -155,7 +157,7 @@ class Plant(object):
         uncommon_range =  round((2/3)*(CONST_RARITY_MAX-common_range))
         rare_range =      round((2/3)*(CONST_RARITY_MAX-common_range-uncommon_range))
         legendary_range = round((2/3)*(CONST_RARITY_MAX-common_range-uncommon_range-rare_range))
-        godly_range =     round((2/3)*(CONST_RARITY_MAX-common_range-uncommon_range-rare_range-legendary_range))
+        # godly_range =     round((2/3)*(CONST_RARITY_MAX-common_range-uncommon_range-rare_range-legendary_range))
 
         # print common_range, uncommon_range, rare_range, legendary_range, godly_range
 
@@ -163,7 +165,7 @@ class Plant(object):
         uncommon_max = common_max + uncommon_range
         rare_max = uncommon_max + rare_range
         legendary_max = rare_max + legendary_range
-        godly_max = legendary_max + godly_range
+        godly_max = CONST_RARITY_MAX
 
         # print common_max, uncommon_max, rare_max, legendary_max, godly_max
         if   0 <= rare_seed <= common_max:
@@ -174,7 +176,7 @@ class Plant(object):
             rarity = 2
         elif rare_max < rare_seed <= legendary_max:
             rarity = 3
-        elif legendary_max < rare_seed <= CONST_RARITY_MAX:
+        elif legendary_max < rare_seed <= godly_max:
             rarity = 4
         return rarity
 
@@ -187,6 +189,10 @@ class Plant(object):
             # do stage 5 stuff (after fruiting)
             1==1
 
+    def water(self):
+        # Increase plant growth stage
+        self.watered_date = datetime.datetime.now().date()
+
     def mutate_check(self):
         # Create plant mutation
         # TODO: when out of debug this needs to be set to high number (1000
@@ -198,7 +204,7 @@ class Plant(object):
             mutation = random.randint(0,len(self.mutation_dict)-1)
             if self.mutation == 0:
                 self.mutation = mutation
-                print "mutation!"
+                #print "mutation!"
                 return True
         else:
             return False
@@ -237,9 +243,10 @@ class Plant(object):
             if self.stage < len(self.stage_dict)-1:
                 if self.ticks == life_stages[self.stage]:
                     self.growth()
-                    print self.parse_plant()
+                    #print self.parse_plant()
             if self.mutate_check():
-                print self.parse_plant()
+                1==1
+                #print self.parse_plant()
 
         # what kills the plant?
 
@@ -278,6 +285,7 @@ class DataManager(object):
 
     def save_plant(self, this_plant):
         # create savefile
+        this_plant.last_time = int(time.time())
         with open(self.savefile_path, 'wb') as f:
             pickle.dump(this_plant, f, protocol=2)
 
@@ -289,28 +297,42 @@ class DataManager(object):
 
     def data_write_json(self, this_plant):
         # create json file for user to use outside of the game (website?)
+        this_plant.watered_date = this_plant.watered_date.strftime("%Y-%m-%d")
         json_file = os.path.join(self.botany_dir,self.this_user + '_plant_data.json')
         with open(json_file, 'w') as outfile:
             json.dump(this_plant.__dict__, outfile)
 
+    def whats_happened(self,this_plant):
+        # need to calculate lifetime ticks to determine stage of life
+        # need to calculate if it's been too long since it's watered
+        current_timestamp = int(time.time())
+        current_date = datetime.datetime.now().date()
+
+        time_delta_overall = current_timestamp - this_plant.start_time
+        time_delta_last = current_timestamp - this_plant.last_time
+        time_delta_watered = (current_date - this_plant.watered_date).days
+        # compare timestamp of signout to timestamp now
+        # need to create timestamps to begin with..
+        # create plant birthday = unix datetime
 
 if __name__ == '__main__':
     my_data = DataManager()
     # if plant save file exists
     if my_data.check_plant():
-        print "Welcome back, " + getpass.getuser()
+        #print "Welcome back, " + getpass.getuser()
         my_plant = my_data.load_plant()
-        print my_plant.parse_plant()
+        #print my_plant.parse_plant()
     # otherwise create new plant
     else:
-        print "Welcome, " + getpass.getuser()
+        #print "Welcome, " + getpass.getuser()
         #TODO: onboarding, select seed, select whatever else
         my_plant = Plant(my_data.savefile_path)
     my_plant.start_life()
-    print "Your plant is living :)"
+    #print "Your plant is living :)"
     botany_menu = CursedMenu(my_plant)
-    botany_menu.show([1,2,3], title=' botany ', subtitle='Options')
+    botany_menu.show([1,"water",3], title=' botany ', subtitle='Options')
     #raw_input('Press return to save and exit...\n')
     my_data.save_plant(my_plant)
     my_data.data_write_json(my_plant)
-    print "end"
+    #print "end"
+

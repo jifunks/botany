@@ -1,6 +1,7 @@
-import curses, os, traceback, threading, time
+import curses, os, traceback, threading, time, datetime
 
 class CursedMenu(object):
+    #TODO: create a side panel with log of events..?
     '''A class which abstracts the horrors of building a curses-based menu system'''
     def __init__(self, this_plant):
         '''Initialization'''
@@ -17,10 +18,11 @@ class CursedMenu(object):
         curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
         self.highlighted = curses.color_pair(1)
         self.normal = curses.A_NORMAL
-        thread = threading.Thread(target=self.update_plant_live, args=())
-        thread.daemon = True
-        thread.start()
-
+        screen_thread = threading.Thread(target=self.update_plant_live, args=())
+        screen_thread.daemon = True
+        screen_thread.start()
+        # TODO: tweaking this to try to get rid of garble bug
+        self.screen.clear()
 
     def show(self, options, title="Title", subtitle="Subtitle"):
         '''Draws a menu with the given parameters'''
@@ -56,6 +58,7 @@ class CursedMenu(object):
 
     def draw(self):
         '''Draw the menu and lines'''
+        self.screen.refresh()
         self.screen.border(0)
         self.screen.addstr(2,2, self.title, curses.A_STANDOUT) # Title for this menu
         self.screen.addstr(4,2, self.subtitle, curses.A_BOLD) #Subtitle for this menu
@@ -66,18 +69,27 @@ class CursedMenu(object):
                 textstyle = self.highlighted
             self.screen.addstr(5+index,4, "%d - %s" % (index+1, self.options[index]), textstyle)
 
-        self.screen.refresh()
+        try:
+            self.screen.refresh()
+        except Exception as exception:
+            # Makes sure data is saved in event of a crash due to window resizing
+            self.__exit__()
+            traceback.print_exc()
 
     def update_plant_live(self):
+        # TODO: fix thread synchronization issue.. text garbling
+        # Updates plant data on menu screen, live!
+        # Will eventually use this to display ascii art...
         while self.exit is not True:
             plant_string = self.plant.parse_plant()
             plant_ticks = str(self.plant.ticks)
             self.screen.addstr(10,2, plant_string, curses.A_NORMAL)
             self.screen.addstr(11,2, plant_ticks, curses.A_NORMAL)
+            if self.plant.watered_date == datetime.datetime.now().date():
+                self.screen.addstr(6,13, " - plant watered already!", curses.A_NORMAL)
+
             self.screen.refresh()
             time.sleep(1)
-        #curses.endwin()
-        #os.system('clear')
 
     def get_user_input(self):
         '''Gets the user's input and acts appropriately'''
@@ -109,6 +121,9 @@ class CursedMenu(object):
         if request == 1:
             self.screen.addstr(8,15,str(self.plant.ticks), curses.A_STANDOUT) # Title for this menu
             self.screen.refresh()
+        if request == "water":
+            self.plant.water()
+
 
     def __exit__(self):
         self.exit = True
@@ -119,4 +134,5 @@ class CursedMenu(object):
 
 '''demo'''
 # cm = CursedMenu()
-# cm.show([1,2,3], title=' botany ', subtitle='Options')
+# cm.show([1,"water",3], title=' botany ', subtitle='Options')
+
