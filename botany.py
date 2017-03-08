@@ -8,8 +8,8 @@ import os.path
 import random
 import getpass
 import threading
-
-
+import errno
+from menu_screen import *
 # ideas go here
 # lifecycle of a plant
 # seed -> seedling -> sprout -> young plant -> mature plant -> flower ->
@@ -68,6 +68,7 @@ import threading
 #     myscreen.getch()
 #
 #     curses.endwin()
+
 
 class Plant(object):
     # This is your plant!
@@ -214,7 +215,8 @@ class Plant(object):
         output += self.stage_dict[self.stage] + " "
         if self.stage >= 2:
             output += self.species_dict[self.species] + " "
-        print output
+        # print output
+        return output
 
     def start_life(self):
        # runs life on a thread
@@ -231,13 +233,13 @@ class Plant(object):
         while (self.stage < 5) or (self.dead == False):
             time.sleep(1)
             self.ticks += 1
-            print self.ticks
+            # print self.ticks
             if self.stage < len(self.stage_dict)-1:
                 if self.ticks == life_stages[self.stage]:
                     self.growth()
-                    self.parse_plant()
+                    print self.parse_plant()
             if self.mutate_check():
-                self.parse_plant()
+                print self.parse_plant()
 
         # what kills the plant?
 
@@ -258,8 +260,13 @@ class DataManager(object):
 
     def __init__(self):
         self.this_user = getpass.getuser()
-        if not os.path.exists(self.botany_dir):
+        # check for .botany dir in home
+        try:
             os.makedirs(self.botany_dir)
+        except OSError as exception:
+            if exception.errno != errno.EEXIST:
+                raise
+
         self.savefile_name = self.this_user + '_plant.dat'
 
     def check_plant(self):
@@ -293,7 +300,7 @@ if __name__ == '__main__':
     if my_data.check_plant():
         print "Welcome back, " + getpass.getuser()
         my_plant = my_data.load_plant()
-        my_plant.parse_plant()
+        print my_plant.parse_plant()
     # otherwise create new plant
     else:
         print "Welcome, " + getpass.getuser()
@@ -301,7 +308,9 @@ if __name__ == '__main__':
         my_plant = Plant(my_data.savefile_path)
     my_plant.start_life()
     print "Your plant is living :)"
-    raw_input('Press return to save and exit...\n')
+    botany_menu = CursedMenu(my_plant)
+    botany_menu.show([1,2,3], title=' botany ', subtitle='Options')
+    #raw_input('Press return to save and exit...\n')
     my_data.save_plant(my_plant)
     my_data.data_write_json(my_plant)
     print "end"
