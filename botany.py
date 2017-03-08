@@ -147,7 +147,9 @@ class Plant(object):
         self.file_name = this_filename
         self.start_time = int(time.time())
         self.last_time = int(time.time())
-        self.watered_timestamp = int(0)
+        # must water plant first day
+        self.watered_timestamp = int(time.time())-(24*3601)
+        # self.watered_timestamp = int(time.time()) # debug
         self.watered_times = 0
 
     def rarity_check(self):
@@ -192,8 +194,18 @@ class Plant(object):
 
     def water(self):
         # Increase plant growth stage
-        self.watered_timestamp = int(time.time())
-        self.watered_times += 1
+        # TODO: overwatering? if more than once a day it dies?
+        if not self.dead:
+            self.watered_timestamp = int(time.time())
+            self.watered_times += 1
+
+    def dead_check(self):
+        time_delta_watered = int(time.time()) - self.watered_timestamp
+        # if it has been >5 days since watering, sorry plant is dead :(
+        # if time_delta_watered > 5: #debug
+        if time_delta_watered > (5 * (24 * 3600)):
+            self.dead = True
+        return self.dead
 
     def mutate_check(self):
         # Create plant mutation
@@ -240,7 +252,7 @@ class Plant(object):
         # life_stages = (1*day, 2*day, 3*day, 4*day, 5*day)
         # life_stages = (1, 2, 3, 4, 5)
         # leave this untouched bc it works for now
-        while (self.stage < 5) or (self.dead == False):
+        while not self.dead:
             time.sleep(1)
             self.ticks += 1
             # print self.ticks
@@ -249,6 +261,8 @@ class Plant(object):
                     self.growth()
                     #print self.parse_plant()
             if self.mutate_check():
+                1==1
+            if self.dead_check():
                 1==1
                 #print self.parse_plant()
 
@@ -307,13 +321,11 @@ class DataManager(object):
         # TODO: this needs to check the current ticks w/ life stage 
         # compare timestamp of signout to timestamp now
         time_delta_last = current_timestamp - this_plant.last_time
-        time_delta_watered = int(time.time()) - this_plant.watered_timestamp
-
+        is_dead = this_plant.dead_check()
         # if it has been >5 days since watering, sorry plant is dead :(
-        if time_delta_watered > 5 * (24 * 3600):
-            this_plant.dead = True
+        if not is_dead:
+            this_plant.ticks += time_delta_last
 
-        this_plant.ticks += time_delta_last
         return this_plant
 
     def data_write_json(self, this_plant):

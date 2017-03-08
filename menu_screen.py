@@ -60,7 +60,6 @@ class CursedMenu(object):
             self.__exit__()
             traceback.print_exc()
 
-
     def draw(self):
         '''Draw the menu and lines'''
         self.screen.refresh()
@@ -74,13 +73,16 @@ class CursedMenu(object):
                 textstyle = self.highlighted
             self.screen.addstr(5+index,4, "%d - %s" % (index+1, self.options[index]), textstyle)
 
-        self.screen.addstr(10,2, self.plant_string, curses.A_NORMAL)
-        self.screen.addstr(11,2, self.plant_ticks, curses.A_NORMAL)
+        self.screen.addstr(11,2, self.plant_string, curses.A_NORMAL)
+        self.screen.addstr(12,2, self.plant_ticks, curses.A_NORMAL)
 
-        if int(time.time()) <= self.plant.watered_timestamp + 5*24*3600: 
-            self.screen.addstr(6,13, " - plant watered today :)", curses.A_NORMAL)
+        if not self.plant.dead:
+            if int(time.time()) <= self.plant.watered_timestamp + 24*3600:
+                self.screen.addstr(6,13, " - plant watered today :)", curses.A_NORMAL)
+            else:
+                self.screen.addstr(6,13, "                         ", curses.A_NORMAL)
         else:
-            self.screen.addstr(6,13, "                         ", curses.A_NORMAL)
+            self.screen.addstr(6,13, " - you can't water a dead plant :(", curses.A_NORMAL)
         try:
             self.screen.refresh()
         except Exception as exception:
@@ -91,12 +93,12 @@ class CursedMenu(object):
     def update_plant_live(self):
         # Updates plant data on menu screen, live!
         # Will eventually use this to display ascii art...
-        if self.initialized:
-            while self.exit is not True:
-                self.plant_string = self.plant.parse_plant()
-                self.plant_ticks = str(self.plant.ticks)
+        while not self.exit:
+            self.plant_string = self.plant.parse_plant()
+            self.plant_ticks = str(self.plant.ticks)
+            if self.initialized:
                 self.draw()
-                time.sleep(1)
+            time.sleep(1)
 
     def get_user_input(self):
         '''Gets the user's input and acts appropriately'''
