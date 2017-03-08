@@ -6,6 +6,7 @@ class CursedMenu(object):
     '''A class which abstracts the horrors of building a curses-based menu system'''
     def __init__(self, this_plant):
         '''Initialization'''
+        self.initialized = False
         self.screen = curses.initscr()
         curses.noecho()
         curses.cbreak()
@@ -34,8 +35,8 @@ class CursedMenu(object):
         self.title = title
         self.subtitle = subtitle
         self.selected = 0
+        self.initialized = True
         self.draw_menu()
-
 
     def set_options(self, options):
         '''Validates that the last option is "Exit"'''
@@ -90,11 +91,12 @@ class CursedMenu(object):
     def update_plant_live(self):
         # Updates plant data on menu screen, live!
         # Will eventually use this to display ascii art...
-        while self.exit is not True:
-            self.plant_string = self.plant.parse_plant()
-            self.plant_ticks = str(self.plant.ticks)
-            self.draw()
-            time.sleep(1)
+        if self.initialized:
+            while self.exit is not True:
+                self.plant_string = self.plant.parse_plant()
+                self.plant_ticks = str(self.plant.ticks)
+                self.draw()
+                time.sleep(1)
 
     def get_user_input(self):
         '''Gets the user's input and acts appropriately'''
