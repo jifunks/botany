@@ -147,7 +147,7 @@ class Plant(object):
         self.file_name = this_filename
         self.start_time = int(time.time())
         self.last_time = int(time.time())
-        self.watered_date = datetime.datetime.fromtimestamp(0)
+        self.watered_timestamp = int(0)
         self.watered_times = 0
 
     def rarity_check(self):
@@ -192,7 +192,7 @@ class Plant(object):
 
     def water(self):
         # Increase plant growth stage
-        self.watered_date = datetime.datetime.now().date()
+        self.watered_timestamp = int(time.time())
         self.watered_times += 1
 
     def mutate_check(self):
@@ -236,6 +236,8 @@ class Plant(object):
         # I've created life :)
         # TODO: change out of debug
         life_stages = (5, 15, 30, 45, 60)
+        day = 3600*24
+        # life_stages = (1*day, 2*day, 3*day, 4*day, 5*day)
         # life_stages = (1, 2, 3, 4, 5)
         # leave this untouched bc it works for now
         while (self.stage < 5) or (self.dead == False):
@@ -305,10 +307,10 @@ class DataManager(object):
         # TODO: this needs to check the current ticks w/ life stage 
         # compare timestamp of signout to timestamp now
         time_delta_last = current_timestamp - this_plant.last_time
-        time_delta_watered = int((current_date - this_plant.watered_date).days)
+        time_delta_watered = int(time.time()) - this_plant.watered_timestamp
 
         # if it has been >5 days since watering, sorry plant is dead :(
-        if time_delta_watered > 5:
+        if time_delta_watered > 5 * (24 * 3600):
             this_plant.dead = True
 
         this_plant.ticks += time_delta_last
@@ -316,7 +318,6 @@ class DataManager(object):
 
     def data_write_json(self, this_plant):
         # create json file for user to use outside of the game (website?)
-        this_plant.watered_date = this_plant.watered_date.strftime("%Y-%m-%d")
         json_file = os.path.join(self.botany_dir,self.this_user + '_plant_data.json')
         with open(json_file, 'w') as outfile:
             json.dump(this_plant.__dict__, outfile)
@@ -336,7 +337,7 @@ if __name__ == '__main__':
     my_plant.start_life()
     #print "Your plant is living :)"
     botany_menu = CursedMenu(my_plant)
-    botany_menu.show([1,"water",3], title=' botany ', subtitle='Options')
+    botany_menu.show([1,"water","look","instructions"], title=' botany ', subtitle='Options')
     #raw_input('Press return to save and exit...\n')
     my_data.save_plant(my_plant)
     my_data.data_write_json(my_plant)

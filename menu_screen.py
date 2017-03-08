@@ -2,6 +2,7 @@ import curses, os, traceback, threading, time, datetime
 
 class CursedMenu(object):
     #TODO: create a side panel with log of events..?
+    # TODO: display that updates on either keypress OR tick
     '''A class which abstracts the horrors of building a curses-based menu system'''
     def __init__(self, this_plant):
         '''Initialization'''
@@ -12,8 +13,11 @@ class CursedMenu(object):
         curses.curs_set(0)
         self.screen.keypad(1)
         self.plant = this_plant
+        self.plant_string = self.plant.parse_plant()
+        self.plant_ticks = str(self.plant.ticks)
         self.exit = False
-
+        self.instructiontoggle = False
+        self.maxy, self.maxx = self.screen.getmaxyx()
         # Highlighted and Normal line definitions
         curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
         self.highlighted = curses.color_pair(1)
@@ -69,6 +73,13 @@ class CursedMenu(object):
                 textstyle = self.highlighted
             self.screen.addstr(5+index,4, "%d - %s" % (index+1, self.options[index]), textstyle)
 
+        self.screen.addstr(10,2, self.plant_string, curses.A_NORMAL)
+        self.screen.addstr(11,2, self.plant_ticks, curses.A_NORMAL)
+
+        if int(time.time()) <= self.plant.watered_timestamp + 5*24*3600: 
+            self.screen.addstr(6,13, " - plant watered today :)", curses.A_NORMAL)
+        else:
+            self.screen.addstr(6,13, "                         ", curses.A_NORMAL)
         try:
             self.screen.refresh()
         except Exception as exception:
@@ -77,18 +88,12 @@ class CursedMenu(object):
             traceback.print_exc()
 
     def update_plant_live(self):
-        # TODO: fix thread synchronization issue.. text garbling
         # Updates plant data on menu screen, live!
         # Will eventually use this to display ascii art...
         while self.exit is not True:
-            plant_string = self.plant.parse_plant()
-            plant_ticks = str(self.plant.ticks)
-            self.screen.addstr(10,2, plant_string, curses.A_NORMAL)
-            self.screen.addstr(11,2, plant_ticks, curses.A_NORMAL)
-            if self.plant.watered_date == datetime.datetime.now().date():
-                self.screen.addstr(6,13, " - plant watered today :)", curses.A_NORMAL)
-
-            self.screen.refresh()
+            self.plant_string = self.plant.parse_plant()
+            self.plant_ticks = str(self.plant.ticks)
+            self.draw()
             time.sleep(1)
 
     def get_user_input(self):
@@ -118,11 +123,33 @@ class CursedMenu(object):
     def handle_request(self, request):
         '''This is where you do things with the request'''
         if request is None: return
-        if request == 1:
-            self.screen.addstr(8,15,str(self.plant.ticks), curses.A_STANDOUT) # Title for this menu
-            self.screen.refresh()
         if request == "water":
             self.plant.water()
+        if request == "instructions":
+            if not self.instructiontoggle:
+                instructions_txt = """welcome to botany. you've been given a seed
+that will grow into a beautiful plant. check
+in and water your plant every day to keep it
+alive. it depends on you to live! More info
+is available in the readme :)
+                                   cheers,
+                                   curio"""
+                self.instructiontoggle = not self.instructiontoggle
+            else:
+                instructions_txt = """                                           
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            """
+                # TODO: 
+                self.instructiontoggle = not self.instructiontoggle
+                # self.screen.clear()
+            for y, line in enumerate(instructions_txt.splitlines(), 2):
+                self.screen.addstr(y,self.maxx-50, line)
+            #self.screen.addstr(8,15,str(self.plant.ticks), curses.A_STANDOUT) # Title for this menu
+            self.screen.refresh()
 
 
     def __exit__(self):
