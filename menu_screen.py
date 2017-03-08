@@ -86,7 +86,7 @@ class CursedMenu(object):
             self.screen.addstr(10,2, plant_string, curses.A_NORMAL)
             self.screen.addstr(11,2, plant_ticks, curses.A_NORMAL)
             if self.plant.watered_date == datetime.datetime.now().date():
-                self.screen.addstr(6,13, " - plant watered already!", curses.A_NORMAL)
+                self.screen.addstr(6,13, " - plant watered today :)", curses.A_NORMAL)
 
             self.screen.refresh()
             time.sleep(1)
