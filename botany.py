@@ -130,6 +130,7 @@ class Plant(object):
         17: 'anxious',
         18: 'metallic',
         19: 'glossy',
+        20: 'psychedelic',
     }
 
     def __init__(self, this_filename):
@@ -258,7 +259,7 @@ class Plant(object):
         if self.stage >= 2:
             output += self.species_dict[self.species] + " "
         # print output
-        return output
+        return output.strip()
 
     def start_life(self):
        # runs life on a thread
@@ -281,8 +282,8 @@ class Plant(object):
                     if self.ticks >= life_stages[self.stage]:
                         self.growth()
                         #print self.parse_plant()
-            if self.mutate_check():
-                1==1
+                if self.mutate_check():
+                    1==1
             if self.dead_check():
                 1==1
             if self.water_check():
@@ -322,6 +323,19 @@ class DataManager(object):
         with open(self.savefile_path, 'wb') as f:
             pickle.dump(this_plant, f, protocol=2)
 
+    def autosave(self, this_plant):
+        while True:
+            self.save_plant(this_plant)
+            self.data_write_json(this_plant)
+            #time.sleep(60)
+            time.sleep(5)
+
+    def enable_autosave(self,this_plant):
+        # creates thread to save files every minute
+        thread = threading.Thread(target=self.autosave, args=(this_plant,))
+        thread.daemon = True
+        thread.start()
+
     def load_plant(self):
         # load savefile
         # need to calculate lifetime ticks to determine stage of life
@@ -348,8 +362,16 @@ class DataManager(object):
     def data_write_json(self, this_plant):
         # create json file for user to use outside of the game (website?)
         json_file = os.path.join(self.botany_dir,self.this_user + '_plant_data.json')
+        plant_info = {
+                "owner":this_plant.owner,
+                "description":this_plant.parse_plant(),
+                "age":this_plant.age_formatted,
+                "score":this_plant.ticks,
+                "is_dead":this_plant.dead,
+                "file_name":this_plant.file_name,
+        }
         with open(json_file, 'w') as outfile:
-            json.dump(this_plant.__dict__, outfile)
+            json.dump(plant_info, outfile)
 
 if __name__ == '__main__':
     my_data = DataManager()
@@ -364,6 +386,7 @@ if __name__ == '__main__':
         #TODO: onboarding, select seed, select whatever else
         my_plant = Plant(my_data.savefile_path)
     my_plant.start_life()
+    my_data.enable_autosave(my_plant)
     #print "Your plant is living :)"
     botany_menu = CursedMenu(my_plant)
     botany_menu.show([1,"water","look","instructions"], title=' botany ', subtitle='Options')
