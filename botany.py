@@ -107,6 +107,7 @@ class Plant(object):
         7: 'sunflower',
         8: 'baobab',
         9: 'lithops',
+        10: 'cannabis',
     }
 
     mutation_dict = {
@@ -150,7 +151,6 @@ class Plant(object):
         # must water plant first day
         self.watered_timestamp = int(time.time())-(24*3601)
         # self.watered_timestamp = int(time.time()) # debug
-        self.watered_times = 0
         self.watered_24h = False
 
     def rarity_check(self):
@@ -199,19 +199,10 @@ class Plant(object):
         if not self.dead:
             self.watered_timestamp = int(time.time())
             #TODO: this should only be allowed once a day
-            self.watered_times += 1
             self.watered_24h = True
 
-    def convert_seconds(self,seconds):
-        days, seconds = divmod(seconds, 24 * 60 * 60)
-        hours, seconds = divmod(seconds, 60 * 60)
-        minutes, seconds = divmod(seconds, 60)
-        return days, hours, minutes, seconds
 
     def dead_check(self):
-        # also updates age
-        d,h,m,s = self.convert_seconds(self.ticks)
-        self.age_formatted = ("%dd:%dh:%dm:%ds" % (d, h, m, s)) 
         time_delta_watered = int(time.time()) - self.watered_timestamp
         # if it has been >5 days since watering, sorry plant is dead :(
         # if time_delta_watered > 5: #debug
@@ -359,15 +350,25 @@ class DataManager(object):
 
         return this_plant
 
+    def convert_seconds(self,seconds):
+        days, seconds = divmod(seconds, 24 * 60 * 60)
+        hours, seconds = divmod(seconds, 60 * 60)
+        minutes, seconds = divmod(seconds, 60)
+        return days, hours, minutes, seconds
+
     def data_write_json(self, this_plant):
         # create json file for user to use outside of the game (website?)
         json_file = os.path.join(self.botany_dir,self.this_user + '_plant_data.json')
+        # also updates age
+        d,h,m,s = self.convert_seconds(this_plant.ticks)
+        age_formatted = ("%dd:%dh:%dm:%ds" % (d, h, m, s)) 
         plant_info = {
                 "owner":this_plant.owner,
                 "description":this_plant.parse_plant(),
-                "age":this_plant.age_formatted,
+                "age":age_formatted,
                 "score":this_plant.ticks,
                 "is_dead":this_plant.dead,
+                "last_watered":this_plant.watered_timestamp,
                 "file_name":this_plant.file_name,
         }
         with open(json_file, 'w') as outfile:
@@ -377,21 +378,15 @@ if __name__ == '__main__':
     my_data = DataManager()
     # if plant save file exists
     if my_data.check_plant():
-        #print "Welcome back, " + getpass.getuser()
         my_plant = my_data.load_plant()
-        #print my_plant.parse_plant()
     # otherwise create new plant
     else:
-        #print "Welcome, " + getpass.getuser()
         #TODO: onboarding, select seed, select whatever else
         my_plant = Plant(my_data.savefile_path)
     my_plant.start_life()
     my_data.enable_autosave(my_plant)
-    #print "Your plant is living :)"
     botany_menu = CursedMenu(my_plant)
     botany_menu.show([1,"water","look","instructions"], title=' botany ', subtitle='Options')
-    #raw_input('Press return to save and exit...\n')
     my_data.save_plant(my_plant)
     my_data.data_write_json(my_plant)
-    #print "end"
 

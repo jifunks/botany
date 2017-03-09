@@ -133,8 +133,8 @@ class CursedMenu(object):
                 instructions_txt = """welcome to botany. you've been given a seed
 that will grow into a beautiful plant. check
 in and water your plant every 24h to keep it
-growing. 5 Days without water = death. Your
-plant depends on you to live! More info is
+growing. 5 days without water = death. your
+plant depends on you to live! more info is
 available in the readme :)
                                    cheers,
                                    curio"""
