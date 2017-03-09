@@ -24,7 +24,6 @@ from menu_screen import *
 #   - how long should each stage last ? thinking realistic lmao
 
 # interaction
-#   - watering?
 #   - look at plant, how do you feel? (also gets rid of pests)
 #
 # if >5 days with no water, plant dies
@@ -33,6 +32,7 @@ from menu_screen import *
 # - rain
 # - bugs
 #
+# build multiplayer
 # neighborhood system
 # - create plant id (sort of like userid)
 # - list sorted by plantid that wraps so everybody has 2 neighbors :)
@@ -44,13 +44,8 @@ from menu_screen import *
 # garden system
 # - can plant your plant in the garden to start a new plant
 
-# build time system
-# build persistence across sessions
-
 # build ascii trees
-# build gui?
 
-# build multiplayer
 
 # def display_update:
 #     myscreen = curses.initscr()
@@ -77,7 +72,7 @@ class Plant(object):
         2: 'young',
         3: 'mature',
         4: 'flowering',
-        5: 'fruiting',
+        5: 'seed-bearing',
     }
 
     color_dict = {
@@ -110,6 +105,9 @@ class Plant(object):
         4: 'jade plant',
         5: 'fern',
         6: 'daffodil',
+        7: 'sunflower',
+        8: 'baobab',
+        9: 'lithops',
     }
 
     mutation_dict = {
@@ -123,7 +121,7 @@ class Plant(object):
         7: 'flaming',
         8: 'psychic',
         9: 'screaming',
-        10: 'chaos',
+        10: 'chaotic',
         11: 'hissing',
         12: 'gelatinous',
         13: 'deformed',
@@ -143,7 +141,9 @@ class Plant(object):
         self.color = random.randint(0,len(self.color_dict)-1)
         self.rarity = self.rarity_check()
         self.ticks = 0
+        self.age_formatted = "0"
         self.dead = False
+        self.owner = getpass.getuser()
         self.file_name = this_filename
         self.start_time = int(time.time())
         self.last_time = int(time.time())
@@ -151,6 +151,7 @@ class Plant(object):
         self.watered_timestamp = int(time.time())-(24*3601)
         # self.watered_timestamp = int(time.time()) # debug
         self.watered_times = 0
+        self.watered_24h = False
 
     def rarity_check(self):
         # Generate plant rarity
@@ -197,15 +198,36 @@ class Plant(object):
         # TODO: overwatering? if more than once a day it dies?
         if not self.dead:
             self.watered_timestamp = int(time.time())
+            #TODO: this should only be allowed once a day
             self.watered_times += 1
+            self.watered_24h = True
+
+    def convert_seconds(self,seconds):
+        days, seconds = divmod(seconds, 24 * 60 * 60)
+        hours, seconds = divmod(seconds, 60 * 60)
+        minutes, seconds = divmod(seconds, 60)
+        return days, hours, minutes, seconds
 
     def dead_check(self):
+        # also updates age
+        d,h,m,s = self.convert_seconds(self.ticks)
+        self.age_formatted = ("%dd:%dh:%dm:%ds" % (d, h, m, s)) 
         time_delta_watered = int(time.time()) - self.watered_timestamp
         # if it has been >5 days since watering, sorry plant is dead :(
         # if time_delta_watered > 5: #debug
         if time_delta_watered > (5 * (24 * 3600)):
             self.dead = True
         return self.dead
+
+    def water_check(self):
+        # if plant has been watered in 24h then it keeps growing
+        # time_delta_watered is difference from now to last watered
+        self.time_delta_watered = int(time.time()) - self.watered_timestamp
+        if self.time_delta_watered <= (24 * 3600):
+            return True
+        else:
+            self.watered_24h = False
+            return False
 
     def mutate_check(self):
         # Create plant mutation
@@ -227,7 +249,8 @@ class Plant(object):
         # reads plant info (maybe want to reorg this into a different class
         # with the reader dicts...)
         output = ""
-        output += self.rarity_dict[self.rarity] + " "
+        if self.stage >= 3:
+            output += self.rarity_dict[self.rarity] + " "
         if self.mutation != 0:
             output += self.mutation_dict[self.mutation] + " "
         if self.stage >= 4:
@@ -248,31 +271,24 @@ class Plant(object):
         # I've created life :)
         # TODO: change out of debug
         life_stages = (5, 15, 30, 45, 60)
-        day = 3600*24
+        # day = 3600*24
         # life_stages = (1*day, 2*day, 3*day, 4*day, 5*day)
-        # life_stages = (1, 2, 3, 4, 5)
         # leave this untouched bc it works for now
-        while not self.dead:
+        while (not self.dead):
             time.sleep(1)
-            self.ticks += 1
-            # print self.ticks
-            if self.stage < len(self.stage_dict)-1:
-                if self.ticks >= life_stages[self.stage]:
-                    self.growth()
-                    #print self.parse_plant()
+            if self.watered_24h:
+                self.ticks += 1
+                if self.stage < len(self.stage_dict)-1:
+                    if self.ticks >= life_stages[self.stage]:
+                        self.growth()
+                        #print self.parse_plant()
             if self.mutate_check():
                 1==1
             if self.dead_check():
                 1==1
-                #print self.parse_plant()
-
-        # what kills the plant?
-
-        ## DEBUG:
-        # while my_plant.stage < len(my_plant.stage_dict)-1:
-        #     raw_input("...")
-        #     my_plant.growth()
-        #     my_plant.parse_plant()
+            if self.water_check():
+                1==1
+            # TODO: event check
 
 class DataManager(object):
     # handles user data, puts a .botany dir in user's home dir (OSX/Linux)
@@ -312,19 +328,21 @@ class DataManager(object):
         # need to calculate lifetime ticks to determine stage of life
         with open(self.savefile_path, 'rb') as f:
             this_plant = pickle.load(f)
-
-        current_timestamp = int(time.time())
-        current_date = datetime.datetime.now().date()
-
-        # i wonder if this is a better way to calculate ticks age?
-        time_delta_overall = current_timestamp - this_plant.start_time
-        # TODO: this needs to check the current ticks w/ life stage 
         # compare timestamp of signout to timestamp now
-        time_delta_last = current_timestamp - this_plant.last_time
         is_dead = this_plant.dead_check()
+        is_watered = this_plant.water_check()
+
         # if it has been >5 days since watering, sorry plant is dead :(
         if not is_dead:
-            this_plant.ticks += time_delta_last
+            if is_watered:
+                #need to use time AWAY (i.e. this_plant.last_time)
+                time_delta_last = int(time.time()) - this_plant.last_time
+                ticks_to_add = min(time_delta_last, 24*3600)
+                this_plant.time_delta_watered = 0
+                self.last_water_gain = time.time()
+            else:
+                ticks_to_add = 0
+            this_plant.ticks += ticks_to_add
 
         return this_plant
 

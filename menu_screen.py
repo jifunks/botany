@@ -44,7 +44,6 @@ class CursedMenu(object):
             options.append('Exit')
         self.options = options
 
-
     def draw_menu(self):
         '''Actually draws the menu and handles branching'''
         request = ""
@@ -133,14 +132,16 @@ class CursedMenu(object):
             if not self.instructiontoggle:
                 instructions_txt = """welcome to botany. you've been given a seed
 that will grow into a beautiful plant. check
-in and water your plant every day to keep it
-alive. it depends on you to live! More info
-is available in the readme :)
+in and water your plant every 24h to keep it
+growing. 5 Days without water = death. Your
+plant depends on you to live! More info is
+available in the readme :)
                                    cheers,
                                    curio"""
                 self.instructiontoggle = not self.instructiontoggle
             else:
                 instructions_txt = """                                           
+                                            
                                             
                                             
                                             
