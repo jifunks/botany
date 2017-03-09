@@ -26,7 +26,6 @@ from menu_screen import *
 # interaction
 #   - look at plant, how do you feel? (also gets rid of pests)
 #
-# if >5 days with no water, plant dies
 # events
 # - heatwave
 # - rain
