@@ -170,9 +170,18 @@ class Plant(object):
         self.start_time = int(time.time())
         self.last_time = int(time.time())
         # must water plant first day
-        self.watered_timestamp = int(time.time())-(24*3601)
+        self.watered_timestamp = int(time.time())-(24*3600)-1
         # self.watered_timestamp = int(time.time()) # debug
         self.watered_24h = False
+
+    def new_seed(self,this_filename):
+        # TODO: this is broken :(
+        # TODO: selecting new seed *kind of* clears the screen properly
+        #       but watering it doesn't let it start until you quit and
+        #       restart
+        #       fuck that
+        os.remove(this_filename)
+        self.__init__(this_filename)
 
     def rarity_check(self):
         # Generate plant rarity
@@ -225,10 +234,12 @@ class Plant(object):
     def dead_check(self):
         time_delta_watered = int(time.time()) - self.watered_timestamp
         # if it has been >5 days since watering, sorry plant is dead :(
-        # if time_delta_watered > 5: #debug
         if time_delta_watered > (5 * (24 * 3600)):
             self.dead = True
         return self.dead
+
+    def kill_plant(self):
+        self.dead = True
 
     def water_check(self):
         # if plant has been watered in 24h then it keeps growing
@@ -285,19 +296,21 @@ class Plant(object):
         # day = 3600*24
         # life_stages = (1*day, 2*day, 3*day, 4*day, 5*day)
         # leave this untouched bc it works for now
-        while (not self.dead):
+        # while (not self.dead):
+        while True:
             time.sleep(1)
-            if self.watered_24h:
-                self.ticks += 1
-                if self.stage < len(self.stage_dict)-1:
-                    if self.ticks >= life_stages[self.stage]:
-                        self.growth()
-                        #print self.parse_plant()
-                if self.mutate_check():
-                    1==1
-            if self.dead_check():
-                1==1
+            if not self.dead:
+                if self.watered_24h:
+                    self.ticks += 1
+                    if self.stage < len(self.stage_dict)-1:
+                        if self.ticks >= life_stages[self.stage]:
+                            self.growth()
+                            #print self.parse_plant()
+                    if self.mutate_check():
+                        1==1
             if self.water_check():
+                1==1
+            if self.dead_check():
                 1==1
             # TODO: event check
 
@@ -381,7 +394,7 @@ class DataManager(object):
         json_file = os.path.join(self.botany_dir,self.this_user + '_plant_data.json')
         # also updates age
         d,h,m,s = self.convert_seconds(this_plant.ticks)
-        age_formatted = ("%dd:%dh:%dm:%ds" % (d, h, m, s)) 
+        age_formatted = ("%dd:%dh:%dm:%ds" % (d, h, m, s))
         plant_info = {
                 "owner":this_plant.owner,
                 "description":this_plant.parse_plant(),
@@ -406,7 +419,11 @@ if __name__ == '__main__':
     my_plant.start_life()
     my_data.enable_autosave(my_plant)
     botany_menu = CursedMenu(my_plant)
-    botany_menu.show([1,"water","look","instructions"], title=' botany ', subtitle='Options')
+    botany_menu.show(["water","look","garden","instructions"], title=' botany ', subtitle='options')
+    # if not my_plant.dead:
+    #     botany_menu.show(["water","look","garden","instructions"], title=' botany ', subtitle='options')
+    # else:
+    #     botany_menu.show(["water","look","garden","instructions"], title=' botany ', subtitle='options')
     my_data.save_plant(my_plant)
     my_data.data_write_json(my_plant)
 

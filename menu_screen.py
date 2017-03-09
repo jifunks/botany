@@ -32,23 +32,38 @@ class CursedMenu(object):
     def show(self, options, title="Title", subtitle="Subtitle"):
         '''Draws a menu with the given parameters'''
         self.set_options(options)
+        self.update_options()
         self.title = title
         self.subtitle = subtitle
         self.selected = 0
         self.initialized = True
         self.draw_menu()
 
+    def update_options(self):
+        if self.plant.dead:
+            if "kill" in self.options:
+                self.options.remove("kill")
+            if "new" not in self.options:
+                self.options.insert(-1,"new")
+        else:
+            if "new" in self.options:
+                self.options.remove("new")
+            if "kill" not in self.options:
+                self.options.insert(-1,"kill")
+            #self.draw_menu()
+            #self.screen.clear()
+
     def set_options(self, options):
-        '''Validates that the last option is "Exit"'''
-        if options[-1] is not 'Exit':
-            options.append('Exit')
+        '''Validates that the last option is "exit"'''
+        if options[-1] is not 'exit':
+            options.append('exit')
         self.options = options
 
     def draw_menu(self):
         '''Actually draws the menu and handles branching'''
         request = ""
         try:
-            while request is not "Exit":
+            while request is not "exit":
                 self.draw()
                 request = self.get_user_input()
                 self.handle_request(request)
@@ -61,6 +76,7 @@ class CursedMenu(object):
 
     def draw(self):
         '''Draw the menu and lines'''
+        clear_bar = " " * (int(self.maxx/2))
         self.screen.refresh()
         self.screen.border(0)
         self.screen.addstr(2,2, self.title, curses.A_STANDOUT) # Title for this menu
@@ -70,18 +86,24 @@ class CursedMenu(object):
             textstyle = self.normal
             if index == self.selected:
                 textstyle = self.highlighted
+            # TODO: this is hacky
+            self.screen.addstr(5+index,4, clear_bar, curses.A_NORMAL)
             self.screen.addstr(5+index,4, "%d - %s" % (index+1, self.options[index]), textstyle)
 
+        self.screen.addstr(11,2, clear_bar, curses.A_NORMAL)
+        self.screen.addstr(12,2, clear_bar, curses.A_NORMAL)
         self.screen.addstr(11,2, self.plant_string, curses.A_NORMAL)
         self.screen.addstr(12,2, self.plant_ticks, curses.A_NORMAL)
 
         if not self.plant.dead:
             if int(time.time()) <= self.plant.watered_timestamp + 24*3600:
-                self.screen.addstr(6,13, " - plant watered today :)", curses.A_NORMAL)
+                self.screen.addstr(5,13, clear_bar, curses.A_NORMAL)
+                self.screen.addstr(5,13, " - plant watered today :)", curses.A_NORMAL)
             else:
-                self.screen.addstr(6,13, "                         ", curses.A_NORMAL)
+                self.screen.addstr(5,13, clear_bar, curses.A_NORMAL)
         else:
-            self.screen.addstr(6,13, " - you can't water a dead plant :(", curses.A_NORMAL)
+            self.screen.addstr(5,13, clear_bar, curses.A_NORMAL)
+            self.screen.addstr(5,13, " - you can't water a dead plant :(", curses.A_NORMAL)
         try:
             self.screen.refresh()
         except Exception as exception:
@@ -92,10 +114,12 @@ class CursedMenu(object):
     def update_plant_live(self):
         # Updates plant data on menu screen, live!
         # Will eventually use this to display ascii art...
+        # self.set_options(self.options)
         while not self.exit:
             self.plant_string = self.plant.parse_plant()
             self.plant_ticks = str(self.plant.ticks)
             if self.initialized:
+                self.update_options()
                 self.draw()
             time.sleep(1)
 
@@ -103,7 +127,7 @@ class CursedMenu(object):
         '''Gets the user's input and acts appropriately'''
         user_in = self.screen.getch() # Gets user input
 
-        '''Enter and Exit Keys are special cases'''
+        '''Enter and exit Keys are special cases'''
         if user_in == 10:
             return self.options[self.selected]
         if user_in == 27:
@@ -126,6 +150,10 @@ class CursedMenu(object):
     def handle_request(self, request):
         '''This is where you do things with the request'''
         if request is None: return
+        if request is "kill":
+            self.plant.kill_plant()
+        if request is "new":
+            self.plant.new_seed(self.plant.file_name)
         if request == "water":
             self.plant.water()
         if request == "instructions":
@@ -152,10 +180,9 @@ available in the readme :)
                 self.instructiontoggle = not self.instructiontoggle
                 # self.screen.clear()
             for y, line in enumerate(instructions_txt.splitlines(), 2):
-                self.screen.addstr(y,self.maxx-50, line)
+                self.screen.addstr(self.maxy-12+y,self.maxx-47, line)
             #self.screen.addstr(8,15,str(self.plant.ticks), curses.A_STANDOUT) # Title for this menu
             self.screen.refresh()
-
 
     def __exit__(self):
         self.exit = True
