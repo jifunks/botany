@@ -108,6 +108,8 @@ class Plant(object):
         8: 'baobab',
         9: 'lithops',
         10: 'cannabis',
+        11: 'pansy',
+        12: 'iris',
     }
 
     mutation_dict = {
@@ -132,6 +134,25 @@ class Plant(object):
         18: 'metallic',
         19: 'glossy',
         20: 'psychedelic',
+        21: 'bonsai',
+        22: 'foamy',
+        23: 'singing',
+        24: 'fractal',
+        25: 'crunchy',
+        26: 'goth',
+        27: 'oozing',
+        28: 'stinky',
+        29: 'aromatic',
+        30: 'juicy',
+        31: 'smug',
+        32: 'vibrating',
+        33: 'lithe',
+        34: 'chalky',
+        35: 'naive',
+        36: 'ersatz',
+        37: 'disco',
+        38: 'levitating',
+        39: 'colossal',
     }
 
     def __init__(self, this_filename):
@@ -198,7 +219,6 @@ class Plant(object):
         # TODO: overwatering? if more than once a day it dies?
         if not self.dead:
             self.watered_timestamp = int(time.time())
-            #TODO: this should only be allowed once a day
             self.watered_24h = True
 
 
