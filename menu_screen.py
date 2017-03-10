@@ -2,7 +2,6 @@ import curses, os, traceback, threading, time, datetime
 
 class CursedMenu(object):
     #TODO: create a side panel with log of events..?
-    # TODO: display that updates on either keypress OR tick
     '''A class which abstracts the horrors of building a curses-based menu system'''
     def __init__(self, this_plant):
         '''Initialization'''
@@ -76,7 +75,8 @@ class CursedMenu(object):
 
     def draw(self):
         '''Draw the menu and lines'''
-        clear_bar = " " * (int(self.maxx/2))
+        # TODO: display refresh is hacky. Could be more precise
+        clear_bar = " " * (int(self.maxx*2/3))
         self.screen.refresh()
         self.screen.border(0)
         self.screen.addstr(2,2, self.title, curses.A_STANDOUT) # Title for this menu
@@ -86,7 +86,6 @@ class CursedMenu(object):
             textstyle = self.normal
             if index == self.selected:
                 textstyle = self.highlighted
-            # TODO: this is hacky
             self.screen.addstr(5+index,4, clear_bar, curses.A_NORMAL)
             self.screen.addstr(5+index,4, "%d - %s" % (index+1, self.options[index]), textstyle)
 
@@ -176,12 +175,9 @@ available in the readme :)
                                             
                                             
                                             """
-                # TODO: 
                 self.instructiontoggle = not self.instructiontoggle
-                # self.screen.clear()
             for y, line in enumerate(instructions_txt.splitlines(), 2):
                 self.screen.addstr(self.maxy-12+y,self.maxx-47, line)
-            #self.screen.addstr(8,15,str(self.plant.ticks), curses.A_STANDOUT) # Title for this menu
             self.screen.refresh()
 
     def __exit__(self):

@@ -8,6 +8,8 @@ import random
 import getpass
 import threading
 import errno
+import uuid
+from operator import itemgetter
 from menu_screen import *
 # ideas go here
 # lifecycle of a plant
@@ -157,6 +159,7 @@ class Plant(object):
 
     def __init__(self, this_filename):
         # Constructor
+        self.plant_id = str(uuid.uuid4())
         self.stage = 0
         self.mutation = 0
         self.species = random.randint(0,len(self.species_dict)-1)
@@ -175,11 +178,6 @@ class Plant(object):
         self.watered_24h = False
 
     def new_seed(self,this_filename):
-        # TODO: this is broken :(
-        # TODO: selecting new seed *kind of* clears the screen properly
-        #       but watering it doesn't let it start until you quit and
-        #       restart
-        #       fuck that
         os.remove(this_filename)
         self.__init__(this_filename)
 
@@ -296,7 +294,6 @@ class Plant(object):
         # day = 3600*24
         # life_stages = (1*day, 2*day, 3*day, 4*day, 5*day)
         # leave this untouched bc it works for now
-        # while (not self.dead):
         while True:
             time.sleep(1)
             if not self.dead:
@@ -319,9 +316,12 @@ class DataManager(object):
     # TODO: windows... lol
     user_dir = os.path.expanduser("~")
     botany_dir = os.path.join(user_dir,'.botany')
+    game_dir = os.path.dirname(os.path.realpath(__file__))
+
     this_user = getpass.getuser()
     savefile_name = this_user + '_plant.dat'
     savefile_path = os.path.join(botany_dir,savefile_name)
+    garden_file_path = os.path.join(game_dir,'garden_file.dat')
 
     def __init__(self):
         self.this_user = getpass.getuser()
@@ -331,7 +331,6 @@ class DataManager(object):
         except OSError as exception:
             if exception.errno != errno.EEXIST:
                 raise
-
         self.savefile_name = self.this_user + '_plant.dat'
 
     def check_plant(self):
@@ -341,38 +340,33 @@ class DataManager(object):
         else:
             return False
 
-    def save_plant(self, this_plant):
-        # create savefile
-        this_plant.last_time = int(time.time())
-        with open(self.savefile_path, 'wb') as f:
-            pickle.dump(this_plant, f, protocol=2)
-
-    def autosave(self, this_plant):
-        while True:
-            self.save_plant(this_plant)
-            self.data_write_json(this_plant)
-            #time.sleep(60)
-            time.sleep(5)
-
     def enable_autosave(self,this_plant):
         # creates thread to save files every minute
         thread = threading.Thread(target=self.autosave, args=(this_plant,))
         thread.daemon = True
         thread.start()
 
+    def autosave(self, this_plant):
+        # running on thread
+        while True:
+            self.save_plant(this_plant)
+            self.data_write_json(this_plant)
+            self.garden_update(this_plant)
+            # TODO: change after debug
+            #time.sleep(60)
+            time.sleep(5)
+
     def load_plant(self):
         # load savefile
-        # need to calculate lifetime ticks to determine stage of life
         with open(self.savefile_path, 'rb') as f:
             this_plant = pickle.load(f)
-        # compare timestamp of signout to timestamp now
+
+        # get status since last login
         is_dead = this_plant.dead_check()
         is_watered = this_plant.water_check()
 
-        # if it has been >5 days since watering, sorry plant is dead :(
         if not is_dead:
             if is_watered:
-                #need to use time AWAY (i.e. this_plant.last_time)
                 time_delta_last = int(time.time()) - this_plant.last_time
                 ticks_to_add = min(time_delta_last, 24*3600)
                 this_plant.time_delta_watered = 0
@@ -383,18 +377,69 @@ class DataManager(object):
 
         return this_plant
 
-    def convert_seconds(self,seconds):
-        days, seconds = divmod(seconds, 24 * 60 * 60)
-        hours, seconds = divmod(seconds, 60 * 60)
-        minutes, seconds = divmod(seconds, 60)
-        return days, hours, minutes, seconds
+    def plant_age_convert(self,this_plant):
+        # human-readable plant age
+        age_seconds = int(time.time()) - this_plant.start_time
+        days, age_seconds = divmod(age_seconds, 24 * 60 * 60)
+        hours, age_seconds = divmod(age_seconds, 60 * 60)
+        minutes, age_seconds = divmod(age_seconds, 60)
+        age_formatted = ("%dd:%dh:%dm:%ds" % (days, hours, minutes, age_seconds))
+        return age_formatted
+
+    def garden_update(self, this_plant):
+        # garden is a list of 10 tuples sorted by plant score
+        # garden contains one entry for each plant id
+        # garden should be a dict of tuples not a list
+
+        age_formatted = self.plant_age_convert(this_plant)
+        this_plant_id = this_plant.plant_id
+        plant_info = (
+                this_plant.owner,
+                this_plant.parse_plant(),
+                age_formatted,
+                this_plant.ticks,
+                this_plant.dead,
+        )
+
+        if os.path.isfile(self.garden_file_path):
+            # garden file exists: load data
+            with open(self.garden_file_path, 'rb') as f:
+                this_garden = pickle.load(f)
+            new_file_check = False
+        else:
+            # create empty garden list
+            this_garden = {}
+            new_file_check = True
+        # if current plant ID isn't in garden list
+        if this_plant.plant_id not in this_garden:
+            this_garden[this_plant_id] = plant_info
+        # if plant ticks for id is greater than current ticks of plant id
+        else:
+            current_plant_ticks = this_garden[this_plant_id][3]
+            if this_plant.ticks > current_plant_ticks:
+                this_garden[this_plant_id] = plant_info
+        with open(self.garden_file_path, 'wb') as f:
+            pickle.dump(this_garden, f, protocol=2)
+
+        # create json file from plant_info
+        garden_json_path = os.path.join(self.game_dir,'garden_file.json')
+        with open(garden_json_path, 'w') as outfile:
+            json.dump(this_garden, outfile)
+
+        return new_file_check
+
+    def save_plant(self, this_plant):
+        # create savefile
+        this_plant.last_time = int(time.time())
+        with open(self.savefile_path, 'wb') as f:
+            pickle.dump(this_plant, f, protocol=2)
 
     def data_write_json(self, this_plant):
-        # create json file for user to use outside of the game (website?)
+        # create personal json file for user to use outside of the game (website?)
         json_file = os.path.join(self.botany_dir,self.this_user + '_plant_data.json')
+        json_leaderboard = os.path.join(self.game_dir + '_garden.json')
         # also updates age
-        d,h,m,s = self.convert_seconds(this_plant.ticks)
-        age_formatted = ("%dd:%dh:%dm:%ds" % (d, h, m, s))
+        age_formatted = self.plant_age_convert(this_plant)
         plant_info = {
                 "owner":this_plant.owner,
                 "description":this_plant.parse_plant(),
@@ -407,6 +452,9 @@ class DataManager(object):
         with open(json_file, 'w') as outfile:
             json.dump(plant_info, outfile)
 
+        # update leaderboard 'garden' for display in game
+        # also should be a pickle file bc... let's be honest ppl want to cheat
+
 if __name__ == '__main__':
     my_data = DataManager()
     # if plant save file exists
@@ -416,6 +464,7 @@ if __name__ == '__main__':
     else:
         #TODO: onboarding, select seed, select whatever else
         my_plant = Plant(my_data.savefile_path)
+        my_data.data_write_json(my_plant)
     my_plant.start_life()
     my_data.enable_autosave(my_plant)
     botany_menu = CursedMenu(my_plant)
@@ -426,4 +475,4 @@ if __name__ == '__main__':
     #     botany_menu.show(["water","look","garden","instructions"], title=' botany ', subtitle='options')
     my_data.save_plant(my_plant)
     my_data.data_write_json(my_plant)
-
+    my_data.garden_update(my_plant)
