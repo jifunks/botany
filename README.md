@@ -56,6 +56,4 @@ If your plant goes 5 days without water, it will die!
 
 ## credits
 * thank you tilde.town for inspiration!
-* Thank you @etkirsch for [this
-gist](https://gist.github.com/etkirsch/53505478f53aeeac24a5) - python curses
-can be nightmarish!
+* Thank you @etkirsch for [this gist](https://gist.github.com/etkirsch/53505478f53aeeac24a5) - python curses can be nightmarish!
