@@ -63,7 +63,7 @@ from menu_screen import *
 #     myscreen.getch()
 #
 #     curses.endwin()
-
+# TODO: garden file json should be prettier.
 
 class Plant(object):
     # This is your plant!
