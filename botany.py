@@ -393,19 +393,22 @@ class DataManager(object):
 
         age_formatted = self.plant_age_convert(this_plant)
         this_plant_id = this_plant.plant_id
-        plant_info = (
-                this_plant.owner,
-                this_plant.parse_plant(),
-                age_formatted,
-                this_plant.ticks,
-                this_plant.dead,
-        )
+        plant_info = {
+                "owner":this_plant.owner,
+                "description":this_plant.parse_plant(),
+                "age":age_formatted,
+                "score":this_plant.ticks,
+                "dead":this_plant.dead,
+        }
 
         if os.path.isfile(self.garden_file_path):
             # garden file exists: load data
             with open(self.garden_file_path, 'rb') as f:
                 this_garden = pickle.load(f)
             new_file_check = False
+            # TODO: it would be smart to lock this file down somehow, write to
+            # it only through the software (to prevent tampering)
+            os.chmod(self.garden_file_path, 0666)
         else:
             # create empty garden list
             this_garden = {}
@@ -415,7 +418,7 @@ class DataManager(object):
             this_garden[this_plant_id] = plant_info
         # if plant ticks for id is greater than current ticks of plant id
         else:
-            current_plant_ticks = this_garden[this_plant_id][3]
+            current_plant_ticks = this_garden[this_plant_id]["score"]
             if this_plant.ticks > current_plant_ticks:
                 this_garden[this_plant_id] = plant_info
         with open(self.garden_file_path, 'wb') as f:
