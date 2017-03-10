@@ -11,11 +11,7 @@ Check in and water your plant every 24h to keep it growing. 5 days without water
 *(work in progress)*
 
 ## getting started
-botany is designed for unix-based systems. Clone into a local directory using
-`git clone https://github.com/jifunks/botany.git`. Run with `python
-botany.py`. Water your seed to get started. You can come and go as you please
-and your plant continues to grow. Make sure to come back and water every 24 hours or your plant won't grow.
-If your plant goes 5 days without water, it will die!
+botany is designed for unix-based systems. Clone into a local directory using `git clone https://github.com/jifunks/botany.git`. Run with `python botany.py`. Water your seed to get started. You can come and go as you please and your plant continues to grow. Make sure to come back and water every 24 hours or your plant won't grow. If your plant goes 5 days without water, it will die!
 
 ## features
 * Beautiful curses-based menu system
