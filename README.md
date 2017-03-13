@@ -37,9 +37,8 @@ botany is designed for unix-based systems. Clone into a local directory using `g
 ###to-dos
 * Add ASCII plant display
 * Add plant inspection ('look' function)
-* Add garden display ('garden' function)
- * Show other plants living in neighborhood
- * Allows you to water plants
+* Finish garden display ('garden' function)
+ * Allows you to water neighbor's plants
 * Plant end of life (seeding/pollination
  * Plant pollination - cross-breed with neighbor plants to unlock second-gen plants
 * Global events
