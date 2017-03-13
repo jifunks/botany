@@ -171,15 +171,12 @@ class Plant(object):
         legendary_range = round((2/3)*(CONST_RARITY_MAX-common_range-uncommon_range-rare_range))
         # godly_range =     round((2/3)*(CONST_RARITY_MAX-common_range-uncommon_range-rare_range-legendary_range))
 
-        # print common_range, uncommon_range, rare_range, legendary_range, godly_range
-
         common_max = common_range
         uncommon_max = common_max + uncommon_range
         rare_max = uncommon_max + rare_range
         legendary_max = rare_max + legendary_range
         godly_max = CONST_RARITY_MAX
 
-        # print common_max, uncommon_max, rare_max, legendary_max, godly_max
         if   0 <= rare_seed <= common_max:
             rarity = 0
         elif common_max < rare_seed <= uncommon_max:
@@ -240,7 +237,6 @@ class Plant(object):
             mutation = random.randint(0,len(self.mutation_dict)-1)
             if self.mutation == 0:
                 self.mutation = mutation
-                #print "mutation!"
                 return True
         else:
             return False
@@ -258,7 +254,6 @@ class Plant(object):
         output += self.stage_dict[self.stage] + " "
         if self.stage >= 2:
             output += self.species_dict[self.species] + " "
-        # print output
         return output.strip()
 
     def start_life(self):
@@ -282,7 +277,6 @@ class Plant(object):
                     if self.stage < len(self.stage_dict)-1:
                         if self.ticks >= life_stages[self.stage]:
                             self.growth()
-                            #print self.parse_plant()
                     if self.mutate_check():
                         1==1
             if self.water_check():
@@ -465,7 +459,7 @@ if __name__ == '__main__':
         my_data.data_write_json(my_plant)
     my_plant.start_life()
     my_data.start_threads(my_plant)
-    botany_menu = CursedMenu(my_plant,my_data.garden_file_path)
+botany_menu = CursedMenu(my_plant,my_data.garden_file_path)
     botany_menu.show(["water","look","garden","instructions"], title=' botany ', subtitle='options')
     my_data.save_plant(my_plant)
     my_data.data_write_json(my_plant)

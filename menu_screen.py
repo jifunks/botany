@@ -29,7 +29,6 @@ class CursedMenu(object):
         screen_thread = threading.Thread(target=self.update_plant_live, args=())
         screen_thread.daemon = True
         screen_thread.start()
-        # TODO: tweaking this to try to get rid of garble bug
         self.screen.clear()
 
     def show(self, options, title, subtitle):
@@ -131,14 +130,13 @@ class CursedMenu(object):
             self.gardenmenutoggle = not self.gardenmenutoggle
         else:
             plant_table_formatted = ""
-            for line in this_garden:
-                plant_table_formatted += clear_bar
+            for plant in this_garden:
+                if not this_garden[plant]["dead"]:
+                    plant_table_formatted += clear_bar
             self.gardenmenutoggle = not self.gardenmenutoggle
 
         for y, line in enumerate(plant_table_formatted.splitlines(), 2):
             self.screen.addstr(y+12, 2, line)
-        # TODO: this needs to be updated so that it only draws if the window
-        # is big enough.. or try catch it
         self.screen.refresh()
 
     def draw(self):
@@ -148,22 +146,23 @@ class CursedMenu(object):
         # TODO: display refresh is hacky. Could be more precise
         self.screen.refresh()
         self.screen.border(0)
+        # TODO: separate screen for garden menu, interactive
         # if self.gardenmenutoggle:
         #     self.draw_garden()
         # else:
         #     self.draw_default()
-        self.draw_default()
         try:
+            self.draw_default()
             self.screen.refresh()
         except Exception as exception:
             # Makes sure data is saved in event of a crash due to window resizing
+            self.screen.addstr(0,0,"Enlarge terminal!")
             self.__exit__()
             traceback.print_exc()
 
     def update_plant_live(self):
         # Updates plant data on menu screen, live!
         # Will eventually use this to display ascii art...
-        # self.set_options(self.options)
         while not self.exit:
             self.plant_string = self.plant.parse_plant()
             self.plant_ticks = str(self.plant.ticks)
@@ -219,6 +218,7 @@ available in the readme :)
         for y, line in enumerate(instructions_txt.splitlines(), 2):
             self.screen.addstr(self.maxy-12+y,self.maxx-47, line)
         self.screen.refresh()
+
     def handle_request(self, request):
         '''This is where you do things with the request'''
         if request == None: return
@@ -229,9 +229,21 @@ available in the readme :)
         if request == "water":
             self.plant.water()
         if request == "instructions":
-            self.draw_instructions()
+            try:
+                self.draw_instructions()
+            except Exception as exception:
+                # Makes sure data is saved in event of a crash due to window resizing
+                self.screen.addstr(0,0,"Enlarge terminal!")
+                self.__exit__()
+                traceback.print_exc()
         if request == "garden":
-            self.draw_garden()
+            try:
+                self.draw_garden()
+            except Exception as exception:
+                self.screen.addstr(0,0,"Enlarge terminal!")
+                self.__exit__()
+                traceback.print_exc()
+
     def __exit__(self):
         self.exit = True
         curses.curs_set(2)
