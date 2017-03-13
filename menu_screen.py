@@ -1,9 +1,9 @@
-import curses, os, traceback, threading, time, datetime
+import curses, os, traceback, threading, time, datetime, pickle
 
 class CursedMenu(object):
     #TODO: create a side panel with log of events..?
     '''A class which abstracts the horrors of building a curses-based menu system'''
-    def __init__(self, this_plant):
+    def __init__(self, this_plant, this_garden_file_path):
         '''Initialization'''
         self.initialized = False
         self.screen = curses.initscr()
@@ -13,10 +13,14 @@ class CursedMenu(object):
         curses.curs_set(0)
         self.screen.keypad(1)
         self.plant = this_plant
+        self.garden_file_path = this_garden_file_path
         self.plant_string = self.plant.parse_plant()
         self.plant_ticks = str(self.plant.ticks)
         self.exit = False
         self.instructiontoggle = False
+        #TODO: debugging
+        # self.gardenmenutoggle = True
+        self.gardenmenutoggle = False
         self.maxy, self.maxx = self.screen.getmaxyx()
         # Highlighted and Normal line definitions
         curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
@@ -28,8 +32,8 @@ class CursedMenu(object):
         # TODO: tweaking this to try to get rid of garble bug
         self.screen.clear()
 
-    def show(self, options, title="Title", subtitle="Subtitle"):
-        '''Draws a menu with the given parameters'''
+    def show(self, options, title, subtitle):
+        # Draws a menu with parameters
         self.set_options(options)
         self.update_options()
         self.title = title
@@ -39,27 +43,27 @@ class CursedMenu(object):
         self.draw_menu()
 
     def update_options(self):
+        # Makes sure you can get a new plant if it dies
         if self.plant.dead:
             if "kill" in self.options:
                 self.options.remove("kill")
             if "new" not in self.options:
                 self.options.insert(-1,"new")
         else:
+            # TODO: remove after debug or bury in settings
             if "new" in self.options:
                 self.options.remove("new")
             if "kill" not in self.options:
                 self.options.insert(-1,"kill")
-            #self.draw_menu()
-            #self.screen.clear()
 
     def set_options(self, options):
-        '''Validates that the last option is "exit"'''
+        # Validates that the last option is "exit"
         if options[-1] is not 'exit':
             options.append('exit')
         self.options = options
 
     def draw_menu(self):
-        '''Actually draws the menu and handles branching'''
+        # Actually draws the menu and handles branching
         request = ""
         try:
             while request is not "exit":
@@ -73,12 +77,9 @@ class CursedMenu(object):
             self.__exit__()
             traceback.print_exc()
 
-    def draw(self):
-        '''Draw the menu and lines'''
-        # TODO: display refresh is hacky. Could be more precise
+    def draw_default(self):
+        # Draws default menu
         clear_bar = " " * (int(self.maxx*2/3))
-        self.screen.refresh()
-        self.screen.border(0)
         self.screen.addstr(2,2, self.title, curses.A_STANDOUT) # Title for this menu
         self.screen.addstr(4,2, self.subtitle, curses.A_BOLD) #Subtitle for this menu
         # Display all the menu items, showing the 'pos' item highlighted
@@ -103,6 +104,55 @@ class CursedMenu(object):
         else:
             self.screen.addstr(5,13, clear_bar, curses.A_NORMAL)
             self.screen.addstr(5,13, " - you can't water a dead plant :(", curses.A_NORMAL)
+
+    def format_garden_data(self,this_garden):
+        plant_table = ""
+        # TODO: include only live plants maybe
+        for plant_id in this_garden:
+            if this_garden[plant_id]:
+                if not this_garden[plant_id]["dead"]:
+                    this_plant = this_garden[plant_id]
+                    plant_table += this_plant["owner"] + " - "
+                    plant_table += this_plant["age"] + " - "
+                    plant_table += this_plant["description"] + " - "
+                    plant_table += str(this_plant["score"]) + "\n"
+        return plant_table
+
+    def draw_garden(self):
+        # Draws neighborhood
+        clear_bar = " " * (self.maxx-2) + "\n"
+        control_keys = [curses.KEY_UP, curses.KEY_DOWN, curses.KEY_LEFT, curses.KEY_RIGHT]
+        # load data
+        with open(self.garden_file_path, 'rb') as f:
+            this_garden = pickle.load(f)
+        # format data
+        if not self.gardenmenutoggle:
+            plant_table_formatted = self.format_garden_data(this_garden)
+            self.gardenmenutoggle = not self.gardenmenutoggle
+        else:
+            plant_table_formatted = ""
+            for line in this_garden:
+                plant_table_formatted += clear_bar
+            self.gardenmenutoggle = not self.gardenmenutoggle
+
+        for y, line in enumerate(plant_table_formatted.splitlines(), 2):
+            self.screen.addstr(y+12, 2, line)
+        # TODO: this needs to be updated so that it only draws if the window
+        # is big enough.. or try catch it
+        self.screen.refresh()
+
+    def draw(self):
+        # Draw the menu and lines
+        # TODO: this needs to either display the default menu screen or the
+        # garden/leaderboard thing  based on self.gardenmenutoggle
+        # TODO: display refresh is hacky. Could be more precise
+        self.screen.refresh()
+        self.screen.border(0)
+        # if self.gardenmenutoggle:
+        #     self.draw_garden()
+        # else:
+        #     self.draw_default()
+        self.draw_default()
         try:
             self.screen.refresh()
         except Exception as exception:
@@ -123,10 +173,10 @@ class CursedMenu(object):
             time.sleep(1)
 
     def get_user_input(self):
-        '''Gets the user's input and acts appropriately'''
+        # Gets the user's input and acts appropriately
         user_in = self.screen.getch() # Gets user input
 
-        '''Enter and exit Keys are special cases'''
+        # Enter and exit Keys are special cases
         if user_in == 10:
             return self.options[self.selected]
         if user_in == 27:
@@ -145,49 +195,46 @@ class CursedMenu(object):
         self.selected = self.selected % len(self.options)
         return
 
-
-    def handle_request(self, request):
-        '''This is where you do things with the request'''
-        if request is None: return
-        if request is "kill":
-            self.plant.kill_plant()
-        if request is "new":
-            self.plant.new_seed(self.plant.file_name)
-        if request == "water":
-            self.plant.water()
-        if request == "instructions":
-            if not self.instructiontoggle:
-                instructions_txt = """welcome to botany. you've been given a seed
+    def draw_instructions(self):
+        if not self.instructiontoggle:
+            instructions_txt = """welcome to botany. you've been given a seed
 that will grow into a beautiful plant. check
 in and water your plant every 24h to keep it
 growing. 5 days without water = death. your
 plant depends on you to live! more info is
 available in the readme :)
-                                   cheers,
-                                   curio"""
-                self.instructiontoggle = not self.instructiontoggle
-            else:
-                instructions_txt = """                                           
+                               cheers,
+                               curio"""
+            self.instructiontoggle = not self.instructiontoggle
+        else:
+            instructions_txt = """                                           
                                             
                                             
                                             
                                             
                                             
                                             
-                                            """
-                self.instructiontoggle = not self.instructiontoggle
-            for y, line in enumerate(instructions_txt.splitlines(), 2):
-                self.screen.addstr(self.maxy-12+y,self.maxx-47, line)
-            self.screen.refresh()
-
+                                        """
+            self.instructiontoggle = not self.instructiontoggle
+        for y, line in enumerate(instructions_txt.splitlines(), 2):
+            self.screen.addstr(self.maxy-12+y,self.maxx-47, line)
+        self.screen.refresh()
+    def handle_request(self, request):
+        '''This is where you do things with the request'''
+        if request == None: return
+        if request == "kill":
+            self.plant.kill_plant()
+        if request == "new":
+            self.plant.new_seed(self.plant.file_name)
+        if request == "water":
+            self.plant.water()
+        if request == "instructions":
+            self.draw_instructions()
+        if request == "garden":
+            self.draw_garden()
     def __exit__(self):
         self.exit = True
         curses.curs_set(2)
         curses.endwin()
         os.system('clear')
-
-
-'''demo'''
-# cm = CursedMenu()
-# cm.show([1,"water",3], title=' botany ', subtitle='Options')
 
