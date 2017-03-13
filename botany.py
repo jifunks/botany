@@ -11,20 +11,17 @@ import errno
 import uuid
 from operator import itemgetter
 from menu_screen import *
-# ideas go here
-# lifecycle of a plant
-# seed -> seedling -> sprout -> young plant -> mature plant -> flower ->
-# pollination -> fruit -> seeds
-
-# neighboring plants can cross pollinate for different plants
-# health based on checkups and watering
 
 # development plan
+
 # build plant lifecycle just stepping through
 #   - What else should it do during life? growth alone is not all that
 #   interesting.
 #   - how long should each stage last ? thinking realistic lmao
-
+#   seed -> seedling -> sprout -> young plant -> mature plant -> flower ->
+#   pollination -> fruit -> seeds
+#   - TODO: pollination and end of life
+#
 # interaction
 #   - look at plant, how do you feel? (also gets rid of pests)
 #
@@ -47,23 +44,6 @@ from menu_screen import *
 
 # build ascii trees
 
-
-# def display_update:
-#     myscreen = curses.initscr()
-#
-#     myscreen.border(0)
-#     myscreen.addstr(1, 2, "you've planted a seed")
-#     myscreen.refresh()
-#
-#     for i in range(1,20):
-#         myscreen.addstr(i, 2, str(i))
-#         time.sleep(1)
-#         myscreen.refresh()
-#
-#     myscreen.getch()
-#
-#     curses.endwin()
-# TODO: garden file json should be prettier.
 
 class Plant(object):
     # This is your plant!
@@ -178,7 +158,7 @@ class Plant(object):
         self.watered_24h = False
 
     def new_seed(self,this_filename):
-        os.remove(this_filename)
+        # Creates life after death
         self.__init__(this_filename)
 
     def rarity_check(self):
@@ -340,11 +320,26 @@ class DataManager(object):
         else:
             return False
 
-    def enable_autosave(self,this_plant):
-        # creates thread to save files every minute
-        thread = threading.Thread(target=self.autosave, args=(this_plant,))
-        thread.daemon = True
-        thread.start()
+    def start_threads(self,this_plant):
+        # creates threads to save files every minute
+        death_check_thread = threading.Thread(target=self.death_check_update, args=(this_plant,))
+        death_check_thread.daemon = True
+        death_check_thread.start()
+
+        autosave_thread = threading.Thread(target=self.autosave, args=(this_plant,))
+        autosave_thread.daemon = True
+        autosave_thread.start()
+
+    def death_check_update(self,this_plant):
+        # .1 second updates to minimize race condition
+        # TODO: improve how this is handled to eliminate race condition
+        while True:
+            is_dead = this_plant.dead_check()
+            if is_dead:
+                self.save_plant(this_plant)
+                self.data_write_json(this_plant)
+                self.garden_update(this_plant)
+            time.sleep(.1)
 
     def autosave(self, this_plant):
         # running on thread
@@ -354,6 +349,7 @@ class DataManager(object):
             self.garden_update(this_plant)
             # TODO: change after debug
             #time.sleep(60)
+            # TODO: if plant dies it should force save.
             time.sleep(5)
 
     def load_plant(self):
@@ -387,9 +383,8 @@ class DataManager(object):
         return age_formatted
 
     def garden_update(self, this_plant):
-        # garden is a list of 10 tuples sorted by plant score
+        # garden is a dict of dicts
         # garden contains one entry for each plant id
-        # garden should be a dict of tuples not a list
 
         age_formatted = self.plant_age_convert(this_plant)
         this_plant_id = this_plant.plant_id
@@ -469,13 +464,9 @@ if __name__ == '__main__':
         my_plant = Plant(my_data.savefile_path)
         my_data.data_write_json(my_plant)
     my_plant.start_life()
-    my_data.enable_autosave(my_plant)
-    botany_menu = CursedMenu(my_plant)
+    my_data.start_threads(my_plant)
+    botany_menu = CursedMenu(my_plant,my_data.garden_file_path)
     botany_menu.show(["water","look","garden","instructions"], title=' botany ', subtitle='options')
-    # if not my_plant.dead:
-    #     botany_menu.show(["water","look","garden","instructions"], title=' botany ', subtitle='options')
-    # else:
-    #     botany_menu.show(["water","look","garden","instructions"], title=' botany ', subtitle='options')
     my_data.save_plant(my_plant)
     my_data.data_write_json(my_plant)
     my_data.garden_update(my_plant)
