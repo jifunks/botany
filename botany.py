@@ -3,7 +3,8 @@ import time
 import pickle
 import json
 import math
-import os.path
+import sys
+import os
 import random
 import getpass
 import threading
@@ -15,15 +16,10 @@ from menu_screen import *
 # development plan
 
 # build plant lifecycle just stepping through
-#   - What else should it do during life? growth alone is not all that
-#   interesting.
 #   - how long should each stage last ? thinking realistic lmao
 #   seed -> seedling -> sprout -> young plant -> mature plant -> flower ->
 #   pollination -> fruit -> seeds
 #   - TODO: pollination and end of life
-#
-# interaction
-#   - look at plant, how do you feel? (also gets rid of pests)
 #
 # events
 # - heatwave
@@ -39,11 +35,11 @@ from menu_screen import *
 #   - create rarer species by diff gens
 # - if neighbor plant dies, node will be removed from list
 #
-# garden system
-# - can plant your plant in the garden to start a new plant
-
 # build ascii trees
 
+# Make it fun to keep growing after seed level (what is reward for continuing
+# instead of starting over?
+# Reward for bringing plant to full life - second gen plant w/ more variety
 
 class Plant(object):
     # This is your plant!
@@ -140,6 +136,9 @@ class Plant(object):
     def __init__(self, this_filename):
         # Constructor
         self.plant_id = str(uuid.uuid4())
+        # TODO: change from debug
+        self.life_stages = (10, 20, 30, 40, 50)
+        # self.life_stages = (3600, (3600*24)*3, (3600*24)*10, (3600*24)*20, (3600*24)*30)
         self.stage = 0
         self.mutation = 0
         self.species = random.randint(0,len(self.species_dict)-1)
@@ -148,6 +147,7 @@ class Plant(object):
         self.ticks = 0
         self.age_formatted = "0"
         self.dead = False
+        self.write_lock = False
         self.owner = getpass.getuser()
         self.file_name = this_filename
         self.start_time = int(time.time())
@@ -157,9 +157,20 @@ class Plant(object):
         # self.watered_timestamp = int(time.time()) # debug
         self.watered_24h = False
 
-    def new_seed(self,this_filename):
-        # Creates life after death
-        self.__init__(this_filename)
+    def parse_plant(self):
+        # reads plant info (maybe want to reorg this into a different class
+        # with the reader dicts...)
+        output = ""
+        if self.stage >= 3:
+            output += self.rarity_dict[self.rarity] + " "
+        if self.mutation != 0:
+            output += self.mutation_dict[self.mutation] + " "
+        if self.stage >= 4:
+            output += self.color_dict[self.color] + " "
+        output += self.stage_dict[self.stage] + " "
+        if self.stage >= 2:
+            output += self.species_dict[self.species] + " "
+        return output.strip()
 
     def rarity_check(self):
         # Generate plant rarity
@@ -189,32 +200,12 @@ class Plant(object):
             rarity = 4
         return rarity
 
-    def growth(self):
-        # Increase plant growth stage
-        if self.stage < (len(self.stage_dict)-1):
-            self.stage += 1
-            # do stage growth stuff
-        else:
-            # do stage 5 stuff (after fruiting)
-            1==1
-
-    def water(self):
-        # Increase plant growth stage
-        # TODO: overwatering? if more than once a day it dies?
-        if not self.dead:
-            self.watered_timestamp = int(time.time())
-            self.watered_24h = True
-
-
     def dead_check(self):
         time_delta_watered = int(time.time()) - self.watered_timestamp
         # if it has been >5 days since watering, sorry plant is dead :(
         if time_delta_watered > (5 * (24 * 3600)):
             self.dead = True
         return self.dead
-
-    def kill_plant(self):
-        self.dead = True
 
     def water_check(self):
         # if plant has been watered in 24h then it keeps growing
@@ -230,7 +221,7 @@ class Plant(object):
         # Create plant mutation
         # TODO: when out of debug this needs to be set to high number (1000
         # even maybe)
-        CONST_MUTATION_RARITY = 10 # Increase this # to make mutation rarer (chance 1 out of x)
+        CONST_MUTATION_RARITY = 2000 # Increase this # to make mutation rarer (chance 1 out of x)
         mutation_seed = random.randint(1,CONST_MUTATION_RARITY)
         if mutation_seed == CONST_MUTATION_RARITY:
             # mutation gained!
@@ -241,20 +232,39 @@ class Plant(object):
         else:
             return False
 
-    def parse_plant(self):
-        # reads plant info (maybe want to reorg this into a different class
-        # with the reader dicts...)
-        output = ""
-        if self.stage >= 3:
-            output += self.rarity_dict[self.rarity] + " "
-        if self.mutation != 0:
-            output += self.mutation_dict[self.mutation] + " "
-        if self.stage >= 4:
-            output += self.color_dict[self.color] + " "
-        output += self.stage_dict[self.stage] + " "
-        if self.stage >= 2:
-            output += self.species_dict[self.species] + " "
-        return output.strip()
+    def new_seed(self,this_filename):
+        # Creates life after death
+        self.__init__(this_filename)
+
+    def growth(self):
+        # Increase plant growth stage
+        if self.stage < (len(self.stage_dict)-1):
+            self.stage += 1
+            # do stage growth stuff
+        else:
+            # do stage 5 stuff (after fruiting)
+            1==1
+
+    def water(self):
+        # Increase plant growth stage
+        if not self.dead:
+            self.watered_timestamp = int(time.time())
+            self.watered_24h = True
+
+    def start_over(self):
+        self.write_lock = True
+        self.kill_plant()
+        while self.write_lock:
+            # Wait for garden writer to unlock
+            1==1
+        if not self.write_lock:
+            self.new_seed(self.file_name)
+
+    def kill_plant(self):
+        self.dead = True
+
+    def unlock_new_creation(self):
+        self.write_lock = False
 
     def start_life(self):
        # runs life on a thread
@@ -265,7 +275,7 @@ class Plant(object):
     def life(self):
         # I've created life :)
         # TODO: change out of debug
-        life_stages = (5, 15, 30, 45, 60)
+        # TODO: variable stages of life
         # day = 3600*24
         # life_stages = (1*day, 2*day, 3*day, 4*day, 5*day)
         # leave this untouched bc it works for now
@@ -275,7 +285,7 @@ class Plant(object):
                 if self.watered_24h:
                     self.ticks += 1
                     if self.stage < len(self.stage_dict)-1:
-                        if self.ticks >= life_stages[self.stage]:
+                        if self.ticks >= self.life_stages[self.stage]:
                             self.growth()
                     if self.mutate_check():
                         1==1
@@ -299,6 +309,8 @@ class DataManager(object):
 
     def __init__(self):
         self.this_user = getpass.getuser()
+        # check if instance is already running
+        self.lock_file()
         # check for .botany dir in home
         try:
             os.makedirs(self.botany_dir)
@@ -306,6 +318,19 @@ class DataManager(object):
             if exception.errno != errno.EEXIST:
                 raise
         self.savefile_name = self.this_user + '_plant.dat'
+
+    def lock_file(self):
+        # Only allow one instance of game
+        pid = str(os.getpid())
+        this_filename = "instance.lock"
+        self.pid_file_path = os.path.join(self.botany_dir,this_filename)
+        if os.path.isfile(self.pid_file_path):
+            print "botany already running, exiting. (pid %s)" % pid
+            sys.exit()
+        file(self.pid_file_path, 'w').write(pid)
+
+    def clear_lock(self):
+        os.unlink(self.pid_file_path)
 
     def check_plant(self):
         # check for existing save file
@@ -333,6 +358,7 @@ class DataManager(object):
                 self.save_plant(this_plant)
                 self.data_write_json(this_plant)
                 self.garden_update(this_plant)
+                this_plant.unlock_new_creation()
             time.sleep(.1)
 
     def autosave(self, this_plant):
@@ -379,7 +405,6 @@ class DataManager(object):
     def garden_update(self, this_plant):
         # garden is a dict of dicts
         # garden contains one entry for each plant id
-
         age_formatted = self.plant_age_convert(this_plant)
         this_plant_id = this_plant.plant_id
         plant_info = {
@@ -408,7 +433,7 @@ class DataManager(object):
         # if plant ticks for id is greater than current ticks of plant id
         else:
             current_plant_ticks = this_garden[this_plant_id]["score"]
-            if this_plant.ticks > current_plant_ticks:
+            if this_plant.ticks >= current_plant_ticks:
                 this_garden[this_plant_id] = plant_info
         with open(self.garden_file_path, 'wb') as f:
             pickle.dump(this_garden, f, protocol=2)
@@ -444,9 +469,6 @@ class DataManager(object):
         with open(json_file, 'w') as outfile:
             json.dump(plant_info, outfile)
 
-        # update leaderboard 'garden' for display in game
-        # also should be a pickle file bc... let's be honest ppl want to cheat
-
 if __name__ == '__main__':
     my_data = DataManager()
     # if plant save file exists
@@ -454,13 +476,13 @@ if __name__ == '__main__':
         my_plant = my_data.load_plant()
     # otherwise create new plant
     else:
-        #TODO: onboarding, select seed, select whatever else
         my_plant = Plant(my_data.savefile_path)
         my_data.data_write_json(my_plant)
     my_plant.start_life()
     my_data.start_threads(my_plant)
-botany_menu = CursedMenu(my_plant,my_data.garden_file_path)
+    botany_menu = CursedMenu(my_plant,my_data.garden_file_path)
     botany_menu.show(["water","look","garden","instructions"], title=' botany ', subtitle='options')
     my_data.save_plant(my_plant)
     my_data.data_write_json(my_plant)
     my_data.garden_update(my_plant)
+    my_data.clear_lock()
