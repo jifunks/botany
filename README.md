@@ -1,5 +1,6 @@
 # botany
 ![Screencap](http://tilde.town/~curiouser/botanybeta.png)
+
 by Jake Funke - jifunks@gmail.com - tilde.town/~curiouser - http://jakefunke.online/
 
 A command line, realtime, community plant buddy.
