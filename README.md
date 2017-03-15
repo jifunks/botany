@@ -1,5 +1,6 @@
 # botany
 ![Screencap](http://tilde.town/~curiouser/botanybeta.png)
+
 by Jake Funke - jifunks@gmail.com - tilde.town/~curiouser - http://jakefunke.online/
 
 A command line, realtime, community plant buddy.
@@ -13,11 +14,13 @@ Check in and water your plant every 24h to keep it growing. 5 days without water
 botany is designed for unix-based systems. Clone into a local directory using `git clone https://github.com/jifunks/botany.git`. Run with `python botany.py`. Water your seed to get started. You can come and go as you please and your plant continues to grow. Make sure to come back and water every 24 hours or your plant won't grow. If your plant goes 5 days without water, it will die!
 *Note - botany.py must initially be run by the user who cloned/unzipped
 botany.py - this initalizes the shared data file permissions.*
+
 ## features
 * Curses-based menu system
 * Persistent aging system that allows your plant to grow even when app is closed
 * Community leaderboard (for shared unix servers) created in program directory `garden_file.json`
 * Data file is created in the user's home (~) directory, along with a JSON file that can be used in other apps.
+
 ```
 {
 "description":"common singing blue seed-bearing poppy",
