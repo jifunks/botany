@@ -1,5 +1,5 @@
 # botany
-![Screencap](http://tilde.town/~curiouser/botany.png)
+![Screencap](http://tilde.town/~curiouser/botany.png =800x)
 by Jake Funke - jifunks@gmail.com - tilde.town/~curiouser - http://jakefunke.online/
 
 A command line, realtime, community plant buddy.
