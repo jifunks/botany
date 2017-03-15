@@ -69,9 +69,9 @@ class CursedMenu(object):
         # garden/leaderboard thing
         # TODO: display refresh is hacky. Could be more precise
         self.screen.refresh()
-        self.screen.border(0)
         try:
             self.draw_default()
+            self.screen.border(0)
             self.screen.refresh()
         except Exception as exception:
             # Makes sure data is saved in event of a crash due to window resizing
@@ -99,8 +99,19 @@ class CursedMenu(object):
             self.__exit__()
             #traceback.print_exc()
 
+    def ascii_render(self, filename, ypos, xpos):
+        this_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),"art")
+        this_filename = os.path.join(this_dir,filename)
+        this_file = open(this_filename,"r")
+        this_string = this_file.readlines()
+        this_file.close()
+        for y, line in enumerate(this_string, 2):
+            self.screen.addstr(ypos+y,xpos,line, curses.A_NORMAL)
+        # self.screen.refresh()
+
     def draw_default(self):
         # draws default menu
+        # TODO: draw bee
         clear_bar = " " * (int(self.maxx*2/3))
         self.screen.addstr(2,2, self.title, curses.A_STANDOUT) # Title for this menu
         self.screen.addstr(4,2, self.subtitle, curses.A_BOLD) #Subtitle for this menu
@@ -131,6 +142,7 @@ class CursedMenu(object):
         else:
             self.screen.addstr(5,13, clear_bar, curses.A_NORMAL)
             self.screen.addstr(5,13, " - you can't water a dead plant :(", curses.A_NORMAL)
+        self.ascii_render("bee.txt",-1,self.maxx-27)
 
     def update_plant_live(self):
         # updates plant data on menu screen, live!
@@ -187,13 +199,18 @@ class CursedMenu(object):
 
     def draw_garden(self):
         # draws neighborhood
+        # TODO: use age from start date to now, not ticks or static
         clear_bar = " " * (self.maxx-2) + "\n"
+        clear_block = clear_bar * 5
         control_keys = [curses.KEY_UP, curses.KEY_DOWN, curses.KEY_LEFT, curses.KEY_RIGHT]
         # load data
         with open(self.garden_file_path, 'rb') as f:
             this_garden = pickle.load(f)
         # format data
         if self.infotoggle != 2:
+            for y, line in enumerate(clear_block.splitlines(), 2):
+                self.screen.addstr(y+12, 2, line)
+                self.screen.refresh()
             plant_table_formatted = self.format_garden_data(this_garden)
             self.infotoggle = 2
         else:
@@ -232,7 +249,7 @@ class CursedMenu(object):
             "You think about all the seedlings who came before it.",
             "You and your seedling make a great team.",
             "Your seedling grows slowly and quietly.",
-            "You briefly meditate on the paths your life could take.",
+            "You meditate on the paths your plant's life could take.",
             ],
                 2:[
             "The " + this_species + " makes you feel relaxed.",

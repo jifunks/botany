@@ -10,6 +10,7 @@ import getpass
 import threading
 import errno
 import uuid
+import fcntl
 from operator import itemgetter
 from menu_screen import *
 
@@ -304,13 +305,12 @@ class DataManager(object):
 
     this_user = getpass.getuser()
     savefile_name = this_user + '_plant.dat'
-    savefile_path = os.path.join(botany_dir,savefile_name)
-    garden_file_path = os.path.join(game_dir,'garden_file.dat')
+    savefile_path = os.path.join(botany_dir, savefile_name)
+    garden_file_path = os.path.join(game_dir, 'garden_file.dat')
 
     def __init__(self):
         self.this_user = getpass.getuser()
         # check if instance is already running
-        self.lock_file()
         # check for .botany dir in home
         try:
             os.makedirs(self.botany_dir)
@@ -318,19 +318,6 @@ class DataManager(object):
             if exception.errno != errno.EEXIST:
                 raise
         self.savefile_name = self.this_user + '_plant.dat'
-
-    def lock_file(self):
-        # Only allow one instance of game
-        pid = str(os.getpid())
-        this_filename = "instance.lock"
-        self.pid_file_path = os.path.join(self.botany_dir,this_filename)
-        if os.path.isfile(self.pid_file_path):
-            print "botany already running, exiting. (pid %s)" % pid
-            sys.exit()
-        file(self.pid_file_path, 'w').write(pid)
-
-    def clear_lock(self):
-        os.unlink(self.pid_file_path)
 
     def check_plant(self):
         # check for existing save file
@@ -404,6 +391,9 @@ class DataManager(object):
     def garden_update(self, this_plant):
         # garden is a dict of dicts
         # garden contains one entry for each plant id
+        # TODO: this should calculate age based on time since start, not just
+        # when they saved it
+        # IE someone logged out, still gaining age, just not gaining ticks
         age_formatted = self.plant_age_convert(this_plant)
         this_plant_id = this_plant.plant_id
         plant_info = {
@@ -421,7 +411,10 @@ class DataManager(object):
             new_file_check = False
             # TODO: it would be smart to lock this file down somehow, write to
             # it only through the software (to prevent tampering)
-            os.chmod(self.garden_file_path, 0666)
+            # TODO: this is not the right way to do this, other users who run
+            # it can't chmod that file
+            # TODO: json file also needs to be writeable by all
+            # os.chmod(self.garden_file_path, 0666)
         else:
             # create empty garden list
             this_garden = {}
@@ -483,4 +476,3 @@ if __name__ == '__main__':
     my_data.save_plant(my_plant)
     my_data.data_write_json(my_plant)
     my_data.garden_update(my_plant)
-    my_data.clear_lock()
