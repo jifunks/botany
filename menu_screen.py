@@ -20,7 +20,7 @@ class CursedMenu(object):
         self.exit = False
         self.instructiontoggle = False
         self.gardenmenutoggle = False
-        self.looktoggle = False
+        self.infotoggle = 0
         self.maxy, self.maxx = self.screen.getmaxyx()
         # Highlighted and Normal line definitions
         curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
@@ -31,6 +31,7 @@ class CursedMenu(object):
         screen_thread.daemon = True
         screen_thread.start()
         self.screen.clear()
+        self.show(["water","look","garden","instructions"], title=' botany ', subtitle='options')
 
     def show(self, options, title, subtitle):
         # Draws a menu with parameters
@@ -45,8 +46,6 @@ class CursedMenu(object):
     def update_options(self):
         # Makes sure you can get a new plant if it dies
         if self.plant.dead:
-            # if "start over" in self.options:
-            #     self.options.remove("start over")
             if "start over" not in self.options:
                 self.options.insert(-1,"start over")
         else:
@@ -67,7 +66,7 @@ class CursedMenu(object):
     def draw(self):
         # Draw the menu and lines
         # TODO: this needs to either display the default menu screen or the
-        # garden/leaderboard thing  based on self.gardenmenutoggle
+        # garden/leaderboard thing
         # TODO: display refresh is hacky. Could be more precise
         self.screen.refresh()
         self.screen.border(0)
@@ -76,7 +75,9 @@ class CursedMenu(object):
             self.screen.refresh()
         except Exception as exception:
             # Makes sure data is saved in event of a crash due to window resizing
+            self.screen.clear()
             self.screen.addstr(0,0,"Enlarge terminal!")
+            self.screen.refresh()
             self.__exit__()
             traceback.print_exc()
 
@@ -92,18 +93,21 @@ class CursedMenu(object):
 
         # Also calls __exit__, but adds traceback after
         except Exception as exception:
+            self.screen.clear()
+            self.screen.addstr(0,0,"Enlarge terminal!")
+            self.screen.refresh()
             self.__exit__()
-            traceback.print_exc()
+            #traceback.print_exc()
 
     def draw_default(self):
-        # Draws default menu
+        # draws default menu
         clear_bar = " " * (int(self.maxx*2/3))
         self.screen.addstr(2,2, self.title, curses.A_STANDOUT) # Title for this menu
         self.screen.addstr(4,2, self.subtitle, curses.A_BOLD) #Subtitle for this menu
-        # Clear menu on screen
+        # clear menu on screen
         for index in range(len(self.options)+1):
             self.screen.addstr(5+index,4, clear_bar, curses.A_NORMAL)
-        # Display all the menu items, showing the 'pos' item highlighted
+        # display all the menu items, showing the 'pos' item highlighted
         for index in range(len(self.options)):
             textstyle = self.normal
             if index == self.selected:
@@ -113,8 +117,10 @@ class CursedMenu(object):
 
         self.screen.addstr(11,2, clear_bar, curses.A_NORMAL)
         self.screen.addstr(12,2, clear_bar, curses.A_NORMAL)
-        self.screen.addstr(11,2, self.plant_string, curses.A_NORMAL)
-        self.screen.addstr(12,2, self.plant_ticks, curses.A_NORMAL)
+        self.screen.addstr(11,2, "plant: ", curses.A_DIM)
+        self.screen.addstr(11,9, self.plant_string, curses.A_NORMAL)
+        self.screen.addstr(12,2, "score: ", curses.A_DIM)
+        self.screen.addstr(12,9, self.plant_ticks, curses.A_NORMAL)
 
         if not self.plant.dead:
             if int(time.time()) <= self.plant.watered_timestamp + 24*3600:
@@ -127,8 +133,8 @@ class CursedMenu(object):
             self.screen.addstr(5,13, " - you can't water a dead plant :(", curses.A_NORMAL)
 
     def update_plant_live(self):
-        # Updates plant data on menu screen, live!
-        # Will eventually use this to display ascii art...
+        # updates plant data on menu screen, live!
+        # will eventually use this to display ascii art...
         while not self.exit:
             self.plant_string = self.plant.parse_plant()
             self.plant_ticks = str(self.plant.ticks)
@@ -138,21 +144,27 @@ class CursedMenu(object):
             time.sleep(1)
 
     def get_user_input(self):
-        # Gets the user's input and acts appropriately
-        user_in = self.screen.getch() # Gets user input
-
-        # Enter and exit Keys are special cases
+        # gets the user's input and acts appropriately
+        try:
+            user_in = self.screen.getch() # Gets user input
+        except Exception as e:
+            self.__exit__()
+        # enter and exit Keys are special cases
         if user_in == 10:
             return self.options[self.selected]
         if user_in == 27:
             return self.options[-1]
+        if user_in == curses.KEY_RESIZE:
+            self.maxy,self.maxx = self.screen.getmaxyx()
+            self.screen.clear()
+            self.screen.refresh()
 
-        # This is a number; check to see if we can set it
+        # this is a number; check to see if we can set it
         if user_in >= ord('1') and user_in <= ord(str(min(9,len(self.options)+1))):
             self.selected = user_in - ord('0') - 1 # convert keypress back to a number, then subtract 1 to get index
             return
 
-        # Increment or Decrement
+        # increment or Decrement
         if user_in == curses.KEY_DOWN: # down arrow
             self.selected += 1
         if user_in == curses.KEY_UP: # up arrow
@@ -174,25 +186,25 @@ class CursedMenu(object):
         return plant_table
 
     def draw_garden(self):
-        # Draws neighborhood
+        # draws neighborhood
         clear_bar = " " * (self.maxx-2) + "\n"
         control_keys = [curses.KEY_UP, curses.KEY_DOWN, curses.KEY_LEFT, curses.KEY_RIGHT]
         # load data
         with open(self.garden_file_path, 'rb') as f:
             this_garden = pickle.load(f)
         # format data
-        if not self.gardenmenutoggle:
+        if self.infotoggle != 2:
             plant_table_formatted = self.format_garden_data(this_garden)
-            self.gardenmenutoggle = not self.gardenmenutoggle
+            self.infotoggle = 2
         else:
             plant_table_formatted = clear_bar
             for plant in this_garden:
                 if not this_garden[plant]["dead"]:
                     plant_table_formatted += clear_bar
-            self.gardenmenutoggle = not self.gardenmenutoggle
+            self.infotoggle = 0
 
         for y, line in enumerate(plant_table_formatted.splitlines(), 2):
-            self.screen.addstr(y+17, 2, line)
+            self.screen.addstr(y+12, 2, line)
         self.screen.refresh()
 
     def get_plant_description(self, this_plant):
@@ -209,14 +221,18 @@ class CursedMenu(object):
             "You're ready for a new start with this plant.",
             "You're tired of waiting for your seed to grow.",
             "You wish your seed could tell you what it needs.",
+            "You can feel the spirit inside your seed.",
             ],
                 1:[
             "The seedling fills you with hope.",
+            "The seedling shakes in the wind.",
             "You can make out a tiny leaf - or is that a thorn?",
             "You can feel the seedling looking back at you.",
             "You kiss your seedling good night.",
             "You think about all the seedlings who came before it.",
             "You and your seedling make a great team.",
+            "Your seedling grows slowly and quietly.",
+            "You briefly meditate on the paths your life could take.",
             ],
                 2:[
             "The " + this_species + " makes you feel relaxed.",
@@ -224,27 +240,35 @@ class CursedMenu(object):
             "You quietly sit with your " + this_species + " for a few minutes.",
             "Your " + this_species + " looks pretty good.",
             "You play loud techno to your " + this_species + ".",
+            "You play piano to your " + this_species + ".",
+            "You play rap music to your " + this_species + ".",
+            "You whistle a tune to your " + this_species + ".",
             ],
                 3:[
             "Your " + this_species + " is growing nicely!",
             "You're proud of the dedication it took to grow your " + this_species + ".",
             "The " + this_species + " looks good.",
-            "You think how good this " + this_species + " would look on steroids.",
+            "You think about how good this " + this_species + " will look.",
             "The buds of your " + this_species + " are about to bloom.",
+            "You play your favorite song for your " + this_species + ".",
             ],
                 4:[
             "The " + this_color + " flowers look nice on your " + this_species +"!",
-            "The " + this_color + " flowers have bloomed and fill you with desire.",
+            "The " + this_color + " flowers have bloomed and fill you with positivity.",
             "The " + this_color + " flowers of your " + this_species + " remind you of your childhood.",
+            "The " + this_color + " flowers of your " + this_species + " smell amazing.",
             "The " + this_species + " has grown beautiful " + this_color + " flowers.",
-            "The " + this_color + " petals remind you of your favorite shirt.",
+            "The " + this_color + " petals remind you of that favorite shirt you lost.",
+            "The " + this_color + " flowers remind you of your crush.",
             ],
                 5:[
             "You fondly remember all of the time you spent caring for your " + this_species + ".",
-            "Your " + this_species + " looks old and wise.",
             "Seed pods have grown on your " + this_species + ".",
             "The " + this_species + " fills you with love.",
-            "The " + this_species + " reminds you of your first crush.",
+            "Your " + this_species + " reminds you of your childhood backyard.",
+            "The " + this_species + " reminds you of your family.",
+            "The " + this_species + " reminds you of a forgotten memory.",
+            "You grow nostalgic about the early days with your " + this_species + ".",
             ],
                 99:[
             "You wish you had taken better care of your plant.",
@@ -256,7 +280,6 @@ class CursedMenu(object):
         }
         # self.life_stages is tuple containing length of each stage
         # (seed, seedling, young, mature, flowering)
-        # if stage == 0 == seed
         if this_plant.dead:
             this_stage = 99
 
@@ -274,11 +297,6 @@ class CursedMenu(object):
                 output_text += "You notice your plant looks different.\n"
 
         output_text += this_stage_descriptions[description_num] + "\n"
-
-        # issue 1 - referencing anything past 4 on life stages breaks
-        # issue 2 - 80% using plant ticks doesn't really work since it shifts
-        # each time. need to use the difference between 2 stages, and then
-        # plant ticks minus last stage
 
         if this_stage == 1:
             species_options = [this_plant.species_dict[this_plant.species],
@@ -306,16 +324,20 @@ class CursedMenu(object):
 
     def draw_plant_description(self, this_plant):
         clear_bar = " " * (self.maxx-2) + "\n"
-        control_keys = [curses.KEY_UP, curses.KEY_DOWN, curses.KEY_LEFT, curses.KEY_RIGHT]
         # load data
         # format data
-        if not self.looktoggle:
+        if self.infotoggle != 1:
+            # TODO: clear the bar first
+            # TODO: when garden grows this won't clear everything.
+            output_string = clear_bar * 8
+            for y, line in enumerate(output_string.splitlines(), 2):
+                self.screen.addstr(y+12, 2, line)
+            self.screen.refresh()
             output_string = self.get_plant_description(this_plant)
-            self.looktoggle = not self.looktoggle
+            self.infotoggle = 1
         else:
-            output_string = clear_bar
-            output_string += clear_bar*3
-            self.looktoggle = not self.looktoggle
+            output_string = clear_bar * 4
+            self.infotoggle = 0
 
         for y, line in enumerate(output_string.splitlines(), 2):
             self.screen.addstr(y+12, 2, line)
@@ -347,34 +369,30 @@ available in the readme :)
         self.screen.refresh()
 
     def handle_request(self, request):
-        '''This is where you do things with the request'''
+        '''this is where you do things with the request'''
         if request == None: return
         if request == "start over":
             self.plant.start_over()
         if request == "water":
             self.plant.water()
         if request == "look":
-            # try:
-            self.draw_plant_description(self.plant)
-           #  except Exception as exception:
-           #      self.screen.addstr(0,0,"Enlarge terminal!")
-           #      self.__exit__()
-           #      traceback.print_exc()
+            try:
+                self.draw_plant_description(self.plant)
+            except Exception as exception:
+                self.screen.refresh()
+                # traceback.print_exc()
         if request == "instructions":
             try:
                 self.draw_instructions()
             except Exception as exception:
-                # Makes sure data is saved in event of a crash due to window resizing
-                self.screen.addstr(0,0,"Enlarge terminal!")
-                self.__exit__()
-                traceback.print_exc()
+                self.screen.refresh()
+                # traceback.print_exc()
         if request == "garden":
             try:
                 self.draw_garden()
             except Exception as exception:
-                self.screen.addstr(0,0,"Enlarge terminal!")
-                self.__exit__()
-                traceback.print_exc()
+                self.screen.refresh()
+                # traceback.print_exc()
 
     def __exit__(self):
         self.exit = True

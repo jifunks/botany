@@ -221,7 +221,7 @@ class Plant(object):
         # Create plant mutation
         # TODO: when out of debug this needs to be set to high number (1000
         # even maybe)
-        CONST_MUTATION_RARITY = 2000 # Increase this # to make mutation rarer (chance 1 out of x)
+        CONST_MUTATION_RARITY = 1000 # Increase this # to make mutation rarer (chance 1 out of x)
         mutation_seed = random.randint(1,CONST_MUTATION_RARITY)
         if mutation_seed == CONST_MUTATION_RARITY:
             # mutation gained!
@@ -369,7 +369,6 @@ class DataManager(object):
             self.garden_update(this_plant)
             # TODO: change after debug
             #time.sleep(60)
-            # TODO: if plant dies it should force save.
             time.sleep(5)
 
     def load_plant(self):
@@ -481,7 +480,6 @@ if __name__ == '__main__':
     my_plant.start_life()
     my_data.start_threads(my_plant)
     botany_menu = CursedMenu(my_plant,my_data.garden_file_path)
-    botany_menu.show(["water","look","garden","instructions"], title=' botany ', subtitle='options')
     my_data.save_plant(my_plant)
     my_data.data_write_json(my_plant)
     my_data.garden_update(my_plant)
