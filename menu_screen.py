@@ -71,7 +71,6 @@ class CursedMenu(object):
         self.screen.refresh()
         try:
             self.draw_default()
-            self.screen.border(0)
             self.screen.refresh()
         except Exception as exception:
             # Makes sure data is saved in event of a crash due to window resizing
@@ -100,6 +99,7 @@ class CursedMenu(object):
             #traceback.print_exc()
 
     def ascii_render(self, filename, ypos, xpos):
+        # Prints ASCII art from file at given coordinates
         this_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),"art")
         this_filename = os.path.join(this_dir,filename)
         this_file = open(this_filename,"r")
@@ -111,7 +111,6 @@ class CursedMenu(object):
 
     def draw_default(self):
         # draws default menu
-        # TODO: draw bee
         clear_bar = " " * (int(self.maxx*2/3))
         self.screen.addstr(2,2, self.title, curses.A_STANDOUT) # Title for this menu
         self.screen.addstr(4,2, self.subtitle, curses.A_BOLD) #Subtitle for this menu
@@ -142,7 +141,9 @@ class CursedMenu(object):
         else:
             self.screen.addstr(5,13, clear_bar, curses.A_NORMAL)
             self.screen.addstr(5,13, " - you can't water a dead plant :(", curses.A_NORMAL)
-        self.ascii_render("bee.txt",-1,self.maxx-27)
+
+        # This draws cute ascii from files
+        self.ascii_render("bee.txt",-1,self.maxx-23)
 
     def update_plant_live(self):
         # updates plant data on menu screen, live!
@@ -193,13 +194,12 @@ class CursedMenu(object):
                     this_plant = this_garden[plant_id]
                     plant_table += this_plant["owner"] + " - "
                     plant_table += this_plant["age"] + " - "
-                    plant_table += str(this_plant["score"]) + " points - "
+                    plant_table += str(this_plant["score"]) + "p - "
                     plant_table += this_plant["description"] + "\n"
         return plant_table
 
     def draw_garden(self):
         # draws neighborhood
-        # TODO: use age from start date to now, not ticks or static
         clear_bar = " " * (self.maxx-2) + "\n"
         clear_block = clear_bar * 5
         control_keys = [curses.KEY_UP, curses.KEY_DOWN, curses.KEY_LEFT, curses.KEY_RIGHT]

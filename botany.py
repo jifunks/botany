@@ -222,7 +222,7 @@ class Plant(object):
         # Create plant mutation
         # TODO: when out of debug this needs to be set to high number (1000
         # even maybe)
-        CONST_MUTATION_RARITY = 1000 # Increase this # to make mutation rarer (chance 1 out of x)
+        CONST_MUTATION_RARITY = 2000 # Increase this # to make mutation rarer (chance 1 out of x)
         mutation_seed = random.randint(1,CONST_MUTATION_RARITY)
         if mutation_seed == CONST_MUTATION_RARITY:
             # mutation gained!
@@ -307,6 +307,7 @@ class DataManager(object):
     savefile_name = this_user + '_plant.dat'
     savefile_path = os.path.join(botany_dir, savefile_name)
     garden_file_path = os.path.join(game_dir, 'garden_file.dat')
+    garden_json_path = os.path.join(game_dir, 'garden_file.json')
 
     def __init__(self):
         self.this_user = getpass.getuser()
@@ -391,9 +392,6 @@ class DataManager(object):
     def garden_update(self, this_plant):
         # garden is a dict of dicts
         # garden contains one entry for each plant id
-        # TODO: this should calculate age based on time since start, not just
-        # when they saved it
-        # IE someone logged out, still gaining age, just not gaining ticks
         age_formatted = self.plant_age_convert(this_plant)
         this_plant_id = this_plant.plant_id
         plant_info = {
@@ -409,16 +407,19 @@ class DataManager(object):
             with open(self.garden_file_path, 'rb') as f:
                 this_garden = pickle.load(f)
             new_file_check = False
-            # TODO: it would be smart to lock this file down somehow, write to
-            # it only through the software (to prevent tampering)
-            # TODO: this is not the right way to do this, other users who run
-            # it can't chmod that file
-            # TODO: json file also needs to be writeable by all
-            # os.chmod(self.garden_file_path, 0666)
         else:
-            # create empty garden list
+            # create empty garden list and initalize file permissions
             this_garden = {}
             new_file_check = True
+            open(self.garden_file_path, 'a').close()
+            open(self.garden_json_path, 'a').close()
+            # If user has access, modify permissions to allow others to write
+            # This means the first run has to be by the file owner.
+            if os.stat(self.garden_file_path).st_uid == os.getuid():
+                os.chmod(self.garden_file_path, 0666)
+            if os.stat(self.garden_json_path).st_uid == os.getuid():
+                os.chmod(self.garden_json_path, 0666)
+
         # if current plant ID isn't in garden list
         if this_plant.plant_id not in this_garden:
             this_garden[this_plant_id] = plant_info
@@ -427,12 +428,12 @@ class DataManager(object):
             current_plant_ticks = this_garden[this_plant_id]["score"]
             if this_plant.ticks >= current_plant_ticks:
                 this_garden[this_plant_id] = plant_info
+
+        # dump garden file
         with open(self.garden_file_path, 'wb') as f:
             pickle.dump(this_garden, f, protocol=2)
-
-        # create json file from plant_info
-        garden_json_path = os.path.join(self.game_dir,'garden_file.json')
-        with open(garden_json_path, 'w') as outfile:
+        # dump json file
+        with open(self.garden_json_path, 'w') as outfile:
             json.dump(this_garden, outfile)
 
         return new_file_check
