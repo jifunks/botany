@@ -1,7 +1,6 @@
 import curses, os, traceback, threading, time, datetime, pickle, operator, random
 
 class CursedMenu(object):
-    #TODO: create a side panel with log of events..?
     #TODO: name your plant
     '''A class which abstracts the horrors of building a curses-based menu system'''
     def __init__(self, this_plant, this_garden_file_path):
@@ -65,8 +64,6 @@ class CursedMenu(object):
 
     def draw(self):
         # Draw the menu and lines
-        # TODO: this needs to either display the default menu screen or the
-        # garden/leaderboard thing
         # TODO: display refresh is hacky. Could be more precise
         self.screen.refresh()
         try:
@@ -162,15 +159,21 @@ class CursedMenu(object):
             user_in = self.screen.getch() # Gets user input
         except Exception as e:
             self.__exit__()
+        # DEBUG KEYS
+        # self.screen.addstr(1, 1, str(user_in), curses.A_NORMAL)
+        # self.screen.refresh()
+
+        # Resize sends curses.KEY_RESIZE, update display
+        if user_in == curses.KEY_RESIZE:
+            self.maxy,self.maxx = self.screen.getmaxyx()
+            self.screen.clear()
+            self.screen.refresh()
+
         # enter and exit Keys are special cases
         if user_in == 10:
             return self.options[self.selected]
         if user_in == 27:
             return self.options[-1]
-        if user_in == curses.KEY_RESIZE:
-            self.maxy,self.maxx = self.screen.getmaxyx()
-            self.screen.clear()
-            self.screen.refresh()
 
         # this is a number; check to see if we can set it
         if user_in >= ord('1') and user_in <= ord(str(min(9,len(self.options)+1))):
@@ -178,9 +181,11 @@ class CursedMenu(object):
             return
 
         # increment or Decrement
-        if user_in == curses.KEY_DOWN: # down arrow
+        down_keys = [curses.KEY_DOWN, 14, 106]
+        up_keys = [curses.KEY_UP, 16, 107]
+        if user_in in down_keys: # down arrow
             self.selected += 1
-        if user_in == curses.KEY_UP: # up arrow
+        if user_in in up_keys: # up arrow
             self.selected -=1
         self.selected = self.selected % len(self.options)
         return
@@ -344,16 +349,17 @@ class CursedMenu(object):
         # load data
         # format data
         if self.infotoggle != 1:
-            # TODO: clear the bar first
             # TODO: when garden grows this won't clear everything.
-            output_string = clear_bar * 8
+            # for example if there are 9 people in garden it won't clear all
+            # of them
+            output_string = clear_bar * (self.maxy - 15)
             for y, line in enumerate(output_string.splitlines(), 2):
                 self.screen.addstr(y+12, 2, line)
             self.screen.refresh()
             output_string = self.get_plant_description(this_plant)
             self.infotoggle = 1
         else:
-            output_string = clear_bar * 4
+            output_string = clear_bar * 3
             self.infotoggle = 0
 
         for y, line in enumerate(output_string.splitlines(), 2):

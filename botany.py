@@ -36,7 +36,7 @@ from menu_screen import *
 #   - create rarer species by diff gens
 # - if neighbor plant dies, node will be removed from list
 #
-# build ascii trees
+# build ascii plant art
 
 # Make it fun to keep growing after seed level (what is reward for continuing
 # instead of starting over?
@@ -89,6 +89,13 @@ class Plant(object):
         10: 'cannabis',
         11: 'pansy',
         12: 'iris',
+        13: 'agave',
+        14: 'ficus',
+        15: 'lichen',
+        16: 'sage',
+        17: 'snapdragon',
+        18: 'columbine',
+        19: 'brugmansia',
     }
 
     mutation_dict = {
@@ -138,8 +145,8 @@ class Plant(object):
         # Constructor
         self.plant_id = str(uuid.uuid4())
         # TODO: change from debug
-        self.life_stages = (10, 20, 30, 40, 50)
-        # self.life_stages = (3600, (3600*24)*3, (3600*24)*10, (3600*24)*20, (3600*24)*30)
+        # self.life_stages = (10, 20, 30, 40, 50)
+        self.life_stages = (3600*24, (3600*24)*3, (3600*24)*10, (3600*24)*20, (3600*24)*30)
         self.stage = 0
         self.mutation = 0
         self.species = random.randint(0,len(self.species_dict)-1)
@@ -222,7 +229,7 @@ class Plant(object):
         # Create plant mutation
         # TODO: when out of debug this needs to be set to high number (1000
         # even maybe)
-        CONST_MUTATION_RARITY = 2000 # Increase this # to make mutation rarer (chance 1 out of x)
+        CONST_MUTATION_RARITY = 3000 # Increase this # to make mutation rarer (chance 1 out of x)
         mutation_seed = random.randint(1,CONST_MUTATION_RARITY)
         if mutation_seed == CONST_MUTATION_RARITY:
             # mutation gained!
@@ -275,11 +282,6 @@ class Plant(object):
 
     def life(self):
         # I've created life :)
-        # TODO: change out of debug
-        # TODO: variable stages of life
-        # day = 3600*24
-        # life_stages = (1*day, 2*day, 3*day, 4*day, 5*day)
-        # leave this untouched bc it works for now
         while True:
             time.sleep(1)
             if not self.dead:
@@ -291,14 +293,15 @@ class Plant(object):
                     if self.mutate_check():
                         1==1
             if self.water_check():
+                # Do something
                 1==1
             if self.dead_check():
+                # Do something else
                 1==1
             # TODO: event check
 
 class DataManager(object):
     # handles user data, puts a .botany dir in user's home dir (OSX/Linux)
-    # TODO: windows... lol
     user_dir = os.path.expanduser("~")
     botany_dir = os.path.join(user_dir,'.botany')
     game_dir = os.path.dirname(os.path.realpath(__file__))
@@ -338,8 +341,7 @@ class DataManager(object):
         autosave_thread.start()
 
     def death_check_update(self,this_plant):
-        # .1 second updates to minimize race condition
-        # TODO: improve how this is handled to eliminate race condition
+        # .1 second updates and lock to minimize race condition
         while True:
             is_dead = this_plant.dead_check()
             if is_dead:
