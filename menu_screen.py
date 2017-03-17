@@ -106,6 +106,42 @@ class CursedMenu(object):
             self.screen.addstr(ypos+y,xpos,line, curses.A_NORMAL)
         # self.screen.refresh()
 
+    def draw_plant_ascii(self, this_plant):
+        ypos = 1
+        xpos = int((self.maxx-37)/2 + 25)
+        plant_art_dict = {
+            0: 'poppy',
+            1: 'cactus',
+            2: 'aloe',
+            3: 'flytrap',
+            4: 'jadeplant',
+            5: 'fern',
+            6: 'daffodil',
+            7: 'sunflower',
+            8: 'baobab',
+            9: 'lithops',
+            10: 'cannabis',
+            11: 'pansy',
+            12: 'iris',
+            13: 'agave',
+            14: 'ficus',
+            15: 'moss',
+            16: 'sage',
+            17: 'snapdragon',
+            18: 'columbine',
+            19: 'brugmansia',
+            20: 'palm',
+        }
+
+        if this_plant.stage == 0:
+            self.ascii_render('seed.txt', ypos, xpos)
+        elif this_plant.stage == 1:
+            self.ascii_render('seedling.txt', ypos, xpos)
+        elif this_plant.stage >= 2:
+            # this_filename = plant_art_dict[this_plant.species]+str(this_plant.stage)+'.txt'
+            this_filename = plant_art_dict[this_plant.species]+'1.txt'
+            self.ascii_render(this_filename, ypos, xpos)
+
     def draw_default(self):
         # draws default menu
         clear_bar = " " * (int(self.maxx*2/3))
@@ -140,7 +176,8 @@ class CursedMenu(object):
             self.screen.addstr(5,13, " - you can't water a dead plant :(", curses.A_NORMAL)
 
         # This draws cute ascii from files
-        self.ascii_render("bee.txt",-1,self.maxx-23)
+        self.draw_plant_ascii(self.plant)
+        # self.ascii_render("sun.txt",-2,self.maxx-14)
 
     def update_plant_live(self):
         # updates plant data on menu screen, live!
