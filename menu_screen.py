@@ -230,7 +230,6 @@ class CursedMenu(object):
         self.screen.refresh()
 
     def get_plant_description(self, this_plant):
-        1==1
         output_text = ""
         this_species = this_plant.species_dict[this_plant.species]
         this_color = this_plant.color_dict[this_plant.color]
@@ -244,6 +243,7 @@ class CursedMenu(object):
             "You're tired of waiting for your seed to grow.",
             "You wish your seed could tell you what it needs.",
             "You can feel the spirit inside your seed.",
+            "These pretzels are making you thirsty.",
             ],
                 1:[
             "The seedling fills you with hope.",

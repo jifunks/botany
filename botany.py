@@ -91,11 +91,12 @@ class Plant(object):
         12: 'iris',
         13: 'agave',
         14: 'ficus',
-        15: 'lichen',
+        15: 'moss',
         16: 'sage',
         17: 'snapdragon',
         18: 'columbine',
         19: 'brugmansia',
+        20: 'palm',
     }
 
     mutation_dict = {
@@ -227,8 +228,7 @@ class Plant(object):
 
     def mutate_check(self):
         # Create plant mutation
-        # TODO: when out of debug this needs to be set to high number (1000
-        # even maybe)
+        # TODO: when out of debug this needs to be set to high number
         CONST_MUTATION_RARITY = 3000 # Increase this # to make mutation rarer (chance 1 out of x)
         mutation_seed = random.randint(1,CONST_MUTATION_RARITY)
         if mutation_seed == CONST_MUTATION_RARITY:
@@ -251,7 +251,7 @@ class Plant(object):
             # do stage growth stuff
         else:
             # do stage 5 stuff (after fruiting)
-            1==1
+            pass
 
     def water(self):
         # Increase plant growth stage
@@ -264,7 +264,7 @@ class Plant(object):
         self.kill_plant()
         while self.write_lock:
             # Wait for garden writer to unlock
-            1==1
+            pass
         if not self.write_lock:
             self.new_seed(self.file_name)
 
@@ -291,13 +291,13 @@ class Plant(object):
                         if self.ticks >= self.life_stages[self.stage]:
                             self.growth()
                     if self.mutate_check():
-                        1==1
+                        pass
             if self.water_check():
                 # Do something
-                1==1
+                pass
             if self.dead_check():
                 # Do something else
-                1==1
+                pass
             # TODO: event check
 
 class DataManager(object):
