@@ -120,7 +120,7 @@ class CursedMenu(object):
             7: 'sunflower',
             8: 'baobab',
             9: 'lithops',
-            10: 'cannabis',
+            10: 'hemp',
             11: 'pansy',
             12: 'iris',
             13: 'agave',

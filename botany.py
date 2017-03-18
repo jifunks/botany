@@ -35,8 +35,6 @@ from menu_screen import *
 # - pollination - seed is combination of your plant and neighbor plant
 #   - create rarer species by diff gens
 # - if neighbor plant dies, node will be removed from list
-#
-# build ascii plant art
 
 # Make it fun to keep growing after seed level (what is reward for continuing
 # instead of starting over?
@@ -86,7 +84,7 @@ class Plant(object):
         7: 'sunflower',
         8: 'baobab',
         9: 'lithops',
-        10: 'cannabis',
+        10: 'hemp',
         11: 'pansy',
         12: 'iris',
         13: 'agave',
@@ -145,8 +143,6 @@ class Plant(object):
     def __init__(self, this_filename):
         # Constructor
         self.plant_id = str(uuid.uuid4())
-        # TODO: change from debug
-        # self.life_stages = (10, 20, 30, 40, 50)
         self.life_stages = (3600*24, (3600*24)*3, (3600*24)*10, (3600*24)*20, (3600*24)*30)
         self.stage = 0
         self.mutation = 0
@@ -163,12 +159,10 @@ class Plant(object):
         self.last_time = int(time.time())
         # must water plant first day
         self.watered_timestamp = int(time.time())-(24*3600)-1
-        # self.watered_timestamp = int(time.time()) # debug
         self.watered_24h = False
 
     def parse_plant(self):
-        # reads plant info (maybe want to reorg this into a different class
-        # with the reader dicts...)
+        # Converts plant data to human-readable format
         output = ""
         if self.stage >= 3:
             output += self.rarity_dict[self.rarity] + " "
@@ -229,7 +223,8 @@ class Plant(object):
     def mutate_check(self):
         # Create plant mutation
         # TODO: when out of debug this needs to be set to high number
-        CONST_MUTATION_RARITY = 3000 # Increase this # to make mutation rarer (chance 1 out of x)
+        # Increase this # to make mutation rarer (chance 1 out of x each second)
+        CONST_MUTATION_RARITY = 3000
         mutation_seed = random.randint(1,CONST_MUTATION_RARITY)
         if mutation_seed == CONST_MUTATION_RARITY:
             # mutation gained!
@@ -260,10 +255,13 @@ class Plant(object):
             self.watered_24h = True
 
     def start_over(self):
+        # After plant reaches final stage, given option to restart
         self.write_lock = True
         self.kill_plant()
         while self.write_lock:
             # Wait for garden writer to unlock
+            # garden datafile needs to register that plant has died before
+            # allowing the user to reset
             pass
         if not self.write_lock:
             self.new_seed(self.file_name)

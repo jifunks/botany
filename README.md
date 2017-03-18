@@ -14,6 +14,7 @@ Check in and water your plant every 24h to keep it growing. 5 days without water
 botany is designed for unix-based systems. Clone into a local directory using `$ git clone https://github.com/jifunks/botany.git`.
 
 Run with `$ python botany.py`.
+
 *Note - botany.py must initially be run by the user who cloned/unzipped
 botany.py - this initalizes the shared data file permissions.*
 
@@ -44,7 +45,7 @@ If your plant goes 5 days without water, it will die!
 ```
 
 ### testing features
-* *Plant mutation happens more frequently than it will in final version.*
+* ASCII art only shows first stage of growth - more coming soon!
 
 ### to-dos
 * Add day/night ASCII art
