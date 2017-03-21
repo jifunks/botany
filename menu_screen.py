@@ -45,16 +45,15 @@ class CursedMenu(object):
     def update_options(self):
         # Makes sure you can get a new plant if it dies
         if self.plant.dead:
-            if "start over" not in self.options:
-                self.options.insert(-1,"start over")
+            if "harvest" not in self.options:
+                self.options.insert(-1,"harvest")
         else:
-            # TODO: remove after debug or bury in settings
             if self.plant.stage == 5:
-                if "start over" not in self.options:
-                    self.options.insert(-1,"start over")
+                if "harvest" not in self.options:
+                    self.options.insert(-1,"harvest")
             else:
-                if "start over" in self.options:
-                    self.options.remove("start over")
+                if "harvest" in self.options:
+                    self.options.remove("harvest")
 
     def set_options(self, options):
         # Validates that the last option is "exit"
@@ -228,7 +227,7 @@ class CursedMenu(object):
         return
 
     def format_garden_data(self,this_garden):
-
+        # Returns list of lists (pages) of garden entries
         plant_table = ""
         for plant_id in this_garden:
             if this_garden[plant_id]:
@@ -238,7 +237,11 @@ class CursedMenu(object):
                     plant_table += this_plant["age"] + " - "
                     plant_table += str(this_plant["score"]) + "p - "
                     plant_table += this_plant["description"] + "\n"
-        return plant_table
+        # build list of n entries per page
+        entries_per_page = self.maxy - 16
+        garden_list = plant_table.splitlines()
+        paginated_list = [garden_list[i:i+entries_per_page] for i in range(0,len(garden_list),entries_per_page)]
+        return paginated_list
 
     def draw_garden(self):
         # draws neighborhood
@@ -249,22 +252,47 @@ class CursedMenu(object):
         with open(self.garden_file_path, 'rb') as f:
             this_garden = pickle.load(f)
         # format data
+        plant_table_pages = []
         if self.infotoggle != 2:
+            # if infotoggle isn't 2, the screen currently displays other stuff
+            # we want to prep the screen for showing the garden
+            # Clear text area of other text (look info, etc) first
             for y, line in enumerate(clear_block.splitlines(), 2):
                 self.screen.addstr(y+12, 2, line)
                 self.screen.refresh()
-            plant_table_formatted = self.format_garden_data(this_garden)
+            plant_table_pages = self.format_garden_data(this_garden)
             self.infotoggle = 2
         else:
-            plant_table_formatted = clear_bar
-            for plant in this_garden:
-                if not this_garden[plant]["dead"]:
-                    plant_table_formatted += clear_bar
+            # the screen IS currently showing the garden (1 page), make the
+            # text a bunch of blanks to clear it out
+            big_clear_block = clear_bar * (self.maxy - 14)
+            plant_table_pages.append(big_clear_block.splitlines())
             self.infotoggle = 0
 
-        for y, line in enumerate(plant_table_formatted.splitlines(), 2):
-            self.screen.addstr(y+12, 2, line)
-        self.screen.refresh()
+        # print garden information OR clear it
+        for page_num, page in enumerate(plant_table_pages, 1):
+            # Print page text
+            for y, line in enumerate(page, 2):
+                self.screen.addstr(y+12, 2, line)
+            if len(plant_table_pages) > 1:
+                # Multiple pages, paginate and require keypress
+                page_text = " --- press any key --- (%d/%d)" % (page_num, len(plant_table_pages))
+                self.screen.addstr(self.maxy-2, 2, page_text)
+                self.screen.getch()
+                self.screen.refresh()
+                # Clear page before drawing next
+                for y, line in enumerate(range(self.maxy-16), 2):
+                    self.screen.addstr(y+12, 2, clear_bar)
+                self.infotoggle = 0
+                self.screen.refresh()
+            else:
+                self.screen.refresh()
+                # self.screen.getch()
+                # for y, line in enumerate(range(self.maxy-16), 2):
+                #     self.screen.addstr(y+12, 2, clear_bar)
+                # self.screen.refresh()
+
+
 
     def get_plant_description(self, this_plant):
         output_text = ""
@@ -281,6 +309,8 @@ class CursedMenu(object):
             "You wish your seed could tell you what it needs.",
             "You can feel the spirit inside your seed.",
             "These pretzels are making you thirsty.",
+            "Way to plant, Ann!",
+            "'To see things in the seed, that is genius' - Lao Tzu",
             ],
                 1:[
             "The seedling fills you with hope.",
@@ -308,7 +338,7 @@ class CursedMenu(object):
             "You're proud of the dedication it took to grow your " + this_species + ".",
             "The " + this_species + " looks good.",
             "You think about how good this " + this_species + " will look.",
-            "The buds of your " + this_species + " are about to bloom.",
+            "The buds of your " + this_species + " might bloom soon.",
             "You play your favorite song for your " + this_species + ".",
             ],
                 4:[
@@ -386,9 +416,6 @@ class CursedMenu(object):
         # load data
         # format data
         if self.infotoggle != 1:
-            # TODO: when garden grows this won't clear everything.
-            # for example if there are 9 people in garden it won't clear all
-            # of them
             output_string = clear_bar * (self.maxy - 15)
             for y, line in enumerate(output_string.splitlines(), 2):
                 self.screen.addstr(y+12, 2, line)
@@ -431,7 +458,7 @@ available in the readme :)
     def handle_request(self, request):
         '''this is where you do things with the request'''
         if request == None: return
-        if request == "start over":
+        if request == "harvest":
             self.plant.start_over()
         if request == "water":
             self.plant.water()

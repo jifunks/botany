@@ -224,7 +224,7 @@ class Plant(object):
         # Create plant mutation
         # TODO: when out of debug this needs to be set to high number
         # Increase this # to make mutation rarer (chance 1 out of x each second)
-        CONST_MUTATION_RARITY = 3000
+        CONST_MUTATION_RARITY = 5000
         mutation_seed = random.randint(1,CONST_MUTATION_RARITY)
         if mutation_seed == CONST_MUTATION_RARITY:
             # mutation gained!
@@ -281,7 +281,6 @@ class Plant(object):
     def life(self):
         # I've created life :)
         while True:
-            time.sleep(1)
             if not self.dead:
                 if self.watered_24h:
                     self.ticks += 1
@@ -297,8 +296,11 @@ class Plant(object):
                 # Do something else
                 pass
             # TODO: event check
+            time.sleep(1)
 
 class DataManager(object):
+    # TODO: garden file stuff has a race condition - need to find and
+    # eliminate it.
     # handles user data, puts a .botany dir in user's home dir (OSX/Linux)
     user_dir = os.path.expanduser("~")
     botany_dir = os.path.join(user_dir,'.botany')
@@ -309,6 +311,8 @@ class DataManager(object):
     savefile_path = os.path.join(botany_dir, savefile_name)
     garden_file_path = os.path.join(game_dir, 'garden_file.dat')
     garden_json_path = os.path.join(game_dir, 'garden_file.json')
+    harvest_file_path = os.path.join(botany_dir, 'harvest_file.dat')
+    harvest_json_path = os.path.join(botany_dir, 'harvest_file.json')
 
     def __init__(self):
         self.this_user = getpass.getuser()
@@ -346,17 +350,16 @@ class DataManager(object):
                 self.save_plant(this_plant)
                 self.data_write_json(this_plant)
                 self.garden_update(this_plant)
+                self.harvest_plant(this_plant)
                 this_plant.unlock_new_creation()
             time.sleep(.1)
 
     def autosave(self, this_plant):
-        # running on thread
+        # running on thread, saves plant every 5s
         while True:
             self.save_plant(this_plant)
             self.data_write_json(this_plant)
             self.garden_update(this_plant)
-            # TODO: change after debug
-            #time.sleep(60)
             time.sleep(5)
 
     def load_plant(self):
@@ -377,7 +380,6 @@ class DataManager(object):
             else:
                 ticks_to_add = 0
             this_plant.ticks += ticks_to_add
-
         return this_plant
 
     def plant_age_convert(self,this_plant):
@@ -462,6 +464,35 @@ class DataManager(object):
         with open(json_file, 'w') as outfile:
             json.dump(plant_info, outfile)
 
+    def harvest_plant(self, this_plant):
+        # harvest is a dict of dicts
+        # harvest contains one entry for each plant id
+        age_formatted = self.plant_age_convert(this_plant)
+        this_plant_id = this_plant.plant_id
+        plant_info = {
+                "description":this_plant.parse_plant(),
+                "age":age_formatted,
+                "score":this_plant.ticks,
+        }
+        if os.path.isfile(self.harvest_file_path):
+            # harvest file exists: load data
+            with open(self.harvest_file_path, 'rb') as f:
+                this_harvest = pickle.load(f)
+            new_file_check = False
+        else:
+            this_harvest = {}
+            new_file_check = True
+        this_harvest[this_plant_id] = plant_info
+
+        # dump harvest file
+        with open(self.harvest_file_path, 'wb') as f:
+            pickle.dump(this_harvest, f, protocol=2)
+        # dump json file
+        with open(self.harvest_json_path, 'w') as outfile:
+            json.dump(this_harvest, outfile)
+
+        return new_file_check
+
 if __name__ == '__main__':
     my_data = DataManager()
     # if plant save file exists
@@ -474,6 +505,7 @@ if __name__ == '__main__':
     my_plant.start_life()
     my_data.start_threads(my_plant)
     botany_menu = CursedMenu(my_plant,my_data.garden_file_path)
+
     my_data.save_plant(my_plant)
     my_data.data_write_json(my_plant)
     my_data.garden_update(my_plant)

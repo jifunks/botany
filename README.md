@@ -48,11 +48,13 @@ If your plant goes 5 days without water, it will die!
 * ASCII art only shows first stage of growth - more coming soon!
 
 ### to-dos
-* Add day/night ASCII art
-* Finish garden display ('garden' function)
+* Finish garden feature
+ * Switch to database instead of .dat file
  * Allows you to water neighbor's plants
-* Plant end of life (seeding/pollination)
+* Harvest plant at end of life (gather seeds)
+ * Create harvest file with a log of all previous plants
  * Plant pollination - cross-breed with neighbor plants to unlock second-gen plants
+ * Share seeds with other users
 * Global events
  * Server API to have rain storms, heat waves, insects
 * Name your plant
