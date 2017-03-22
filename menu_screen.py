@@ -43,6 +43,8 @@ class CursedMenu(object):
         self.draw_menu()
 
     def update_options(self):
+        # TODO: should this have separate options if plant dies vs plant is
+        # last stage?
         # Makes sure you can get a new plant if it dies
         if self.plant.dead:
             if "harvest" not in self.options:
@@ -136,9 +138,11 @@ class CursedMenu(object):
             self.ascii_render('seed.txt', ypos, xpos)
         elif this_plant.stage == 1:
             self.ascii_render('seedling.txt', ypos, xpos)
-        elif this_plant.stage >= 2:
-            # this_filename = plant_art_dict[this_plant.species]+str(this_plant.stage)+'.txt'
+        elif this_plant.stage == 2:
             this_filename = plant_art_dict[this_plant.species]+'1.txt'
+            self.ascii_render(this_filename, ypos, xpos)
+        elif this_plant.stage >= 3:
+            this_filename = plant_art_dict[this_plant.species]+'2.txt'
             self.ascii_render(this_filename, ypos, xpos)
 
     def draw_default(self):
@@ -276,7 +280,7 @@ class CursedMenu(object):
                 self.screen.addstr(y+12, 2, line)
             if len(plant_table_pages) > 1:
                 # Multiple pages, paginate and require keypress
-                page_text = " --- press any key --- (%d/%d)" % (page_num, len(plant_table_pages))
+                page_text = "(%d/%d) --- press any key ---" % (page_num, len(plant_table_pages))
                 self.screen.addstr(self.maxy-2, 2, page_text)
                 self.screen.getch()
                 self.screen.refresh()
@@ -287,12 +291,6 @@ class CursedMenu(object):
                 self.screen.refresh()
             else:
                 self.screen.refresh()
-                # self.screen.getch()
-                # for y, line in enumerate(range(self.maxy-16), 2):
-                #     self.screen.addstr(y+12, 2, clear_bar)
-                # self.screen.refresh()
-
-
 
     def get_plant_description(self, this_plant):
         output_text = ""
@@ -332,31 +330,44 @@ class CursedMenu(object):
             "You play piano to your " + this_species + ".",
             "You play rap music to your " + this_species + ".",
             "You whistle a tune to your " + this_species + ".",
+            "You read a poem to your " + this_species + ".",
+            "You tell a secret to your " + this_species + ".",
+            "You play your favorite record for your " + this_species + ".",
             ],
                 3:[
             "Your " + this_species + " is growing nicely!",
             "You're proud of the dedication it took to grow your " + this_species + ".",
-            "The " + this_species + " looks good.",
-            "You think about how good this " + this_species + " will look.",
+            "You take a deep breath with your " + this_species + ".",
+            "You think of all the words that rhyme with " + this_species + ".",
+            "The " + this_species + " looks full of life.",
+            "The " + this_species + " inspires you.",
+            "Your " + this_species + " makes you forget about your problems.",
+            "Your " + this_species + " gives you a reason to keep going.",
+            "Looking at your " + this_species + " helps you focus on what matters.",
+            "You think about how nice this " + this_species + " looks here.",
             "The buds of your " + this_species + " might bloom soon.",
-            "You play your favorite song for your " + this_species + ".",
             ],
                 4:[
             "The " + this_color + " flowers look nice on your " + this_species +"!",
             "The " + this_color + " flowers have bloomed and fill you with positivity.",
-            "The " + this_color + " flowers of your " + this_species + " remind you of your childhood.",
-            "The " + this_color + " flowers of your " + this_species + " smell amazing.",
+            "The " + this_color + " flowers remind you of your childhood.",
+            "The " + this_color + " flowers remind you of spring mornings.",
+            "The " + this_color + " flowers remind you of a forgotten memory.",
+            "The " + this_color + " flowers remind you of your happy place.",
+            "The aroma of the " + this_color + " flowers energize you.",
             "The " + this_species + " has grown beautiful " + this_color + " flowers.",
             "The " + this_color + " petals remind you of that favorite shirt you lost.",
             "The " + this_color + " flowers remind you of your crush.",
+            "You smell the " + this_color + " flowers and are filled with peace.",
             ],
                 5:[
-            "You fondly remember all of the time you spent caring for your " + this_species + ".",
+            "You fondly remember the time you spent caring for your " + this_species + ".",
             "Seed pods have grown on your " + this_species + ".",
+            "You feel like your " + this_species + " appreciates your care.",
             "The " + this_species + " fills you with love.",
-            "Your " + this_species + " reminds you of your childhood backyard.",
-            "The " + this_species + " reminds you of your family.",
-            "The " + this_species + " reminds you of a forgotten memory.",
+            "You're ready for whatever comes after your " + this_species + ".",
+            "You're excited to start growing your next plant.",
+            "You reflect on when your " + this_species + " was just a seedling.",
             "You grow nostalgic about the early days with your " + this_species + ".",
             ],
                 99:[

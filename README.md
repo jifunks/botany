@@ -29,7 +29,7 @@ If your plant goes 5 days without water, it will die!
 * Curses-based menu system, optimized for 80x24 terminal
 * ASCII art display of plant
 * Persistent aging system that allows your plant to grow even when app is closed
-* Community leaderboard (for shared unix servers) created in program directory `garden_file.json`
+* Community garden of other users' plants (for shared unix servers)
 * Data file is created in the user's home (~) directory, along with a JSON file that can be used in other apps.
 
 ```
@@ -45,7 +45,7 @@ If your plant goes 5 days without water, it will die!
 ```
 
 ### testing features
-* ASCII art only shows first stage of growth - more coming soon!
+* ASCII art only shows first few stages of growth - more coming soon!
 
 ### to-dos
 * Finish garden feature
