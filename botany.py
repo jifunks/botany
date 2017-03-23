@@ -11,6 +11,8 @@ import threading
 import errno
 import uuid
 import fcntl
+import sqlite3
+from collections import OrderedDict
 from operator import itemgetter
 from menu_screen import *
 
@@ -29,7 +31,6 @@ from menu_screen import *
 #
 # build multiplayer
 # neighborhood system
-# - create plant id (sort of like userid)
 # - list sorted by plantid that wraps so everybody has 2 neighbors :)
 # - can water neighbors plant once (have to choose which)
 # - pollination - seed is combination of your plant and neighbor plant
@@ -183,7 +184,6 @@ class Plant(object):
         uncommon_range =  round((2/3)*(CONST_RARITY_MAX-common_range))
         rare_range =      round((2/3)*(CONST_RARITY_MAX-common_range-uncommon_range))
         legendary_range = round((2/3)*(CONST_RARITY_MAX-common_range-uncommon_range-rare_range))
-        # godly_range =     round((2/3)*(CONST_RARITY_MAX-common_range-uncommon_range-rare_range-legendary_range))
 
         common_max = common_range
         uncommon_max = common_max + uncommon_range
@@ -299,17 +299,17 @@ class Plant(object):
             time.sleep(1)
 
 class DataManager(object):
-    # TODO: garden file stuff has a race condition - need to find and
-    # eliminate it.
     # handles user data, puts a .botany dir in user's home dir (OSX/Linux)
+    # handles shared data with sqlite db
+
     user_dir = os.path.expanduser("~")
     botany_dir = os.path.join(user_dir,'.botany')
     game_dir = os.path.dirname(os.path.realpath(__file__))
-
     this_user = getpass.getuser()
+
     savefile_name = this_user + '_plant.dat'
     savefile_path = os.path.join(botany_dir, savefile_name)
-    garden_file_path = os.path.join(game_dir, 'garden_file.dat')
+    garden_db_path = os.path.join(game_dir, 'sqlite/garden_db.sqlite')
     garden_json_path = os.path.join(game_dir, 'garden_file.json')
     harvest_file_path = os.path.join(botany_dir, 'harvest_file.dat')
     harvest_json_path = os.path.join(botany_dir, 'harvest_file.json')
@@ -349,18 +349,24 @@ class DataManager(object):
             if is_dead:
                 self.save_plant(this_plant)
                 self.data_write_json(this_plant)
-                self.garden_update(this_plant)
+                self.update_garden_db(this_plant)
                 self.harvest_plant(this_plant)
                 this_plant.unlock_new_creation()
             time.sleep(.1)
 
     def autosave(self, this_plant):
         # running on thread, saves plant every 5s
+        file_update_count = 0
         while True:
+            file_update_count += 1
             self.save_plant(this_plant)
             self.data_write_json(this_plant)
-            self.garden_update(this_plant)
+            self.update_garden_db(this_plant)
+            if file_update_count == 12:
+                # only update garden json every 60s
+                self.update_garden_json()
             time.sleep(5)
+            file_update_count %= 12
 
     def load_plant(self):
         # load savefile
@@ -391,54 +397,81 @@ class DataManager(object):
         age_formatted = ("%dd:%dh:%dm:%ds" % (days, hours, minutes, age_seconds))
         return age_formatted
 
-    def garden_update(self, this_plant):
-        # garden is a dict of dicts
-        # garden contains one entry for each plant id
-        age_formatted = self.plant_age_convert(this_plant)
-        this_plant_id = this_plant.plant_id
-        plant_info = {
-                "owner":this_plant.owner,
-                "description":this_plant.parse_plant(),
-                "age":age_formatted,
-                "score":this_plant.ticks,
-                "dead":this_plant.dead,
-        }
+    def init_database(self):
+        # check if dir exists, create sqlite directory and set OS permissions to 777
+        sqlite_dir_path = os.path.join(self.game_dir,'sqlite')
+        if not os.path.exists(sqlite_dir_path):
+            os.makedirs(sqlite_dir_path)
+            os.chmod(sqlite_dir_path, 0777)
+        conn = sqlite3.connect(self.garden_db_path)
+        init_table_string = """CREATE TABLE IF NOT EXISTS garden (
+        plant_id tinytext PRIMARY KEY,
+        owner text,
+        description text,
+        age text,
+        score integer,
+        is_dead numeric
+        )"""
 
-        if os.path.isfile(self.garden_file_path):
-            # garden file exists: load data
-            with open(self.garden_file_path, 'rb') as f:
-                this_garden = pickle.load(f)
-            new_file_check = False
-        else:
-            # create empty garden list and initalize file permissions
-            this_garden = {}
-            new_file_check = True
-            open(self.garden_file_path, 'a').close()
+        c = conn.cursor()
+        c.execute(init_table_string)
+        conn.close()
+
+        # init only, creates and sets permissions for garden db and json
+        if os.stat(self.garden_db_path).st_uid == os.getuid():
+            os.chmod(self.garden_db_path, 0666)
             open(self.garden_json_path, 'a').close()
-            # If user has access, modify permissions to allow others to write
-            # This means the first run has to be by the file owner.
-            if os.stat(self.garden_file_path).st_uid == os.getuid():
-                os.chmod(self.garden_file_path, 0666)
-            if os.stat(self.garden_json_path).st_uid == os.getuid():
-                os.chmod(self.garden_json_path, 0666)
+            os.chmod(self.garden_json_path, 0666)
 
-        # if current plant ID isn't in garden list
-        if this_plant.plant_id not in this_garden:
-            this_garden[this_plant_id] = plant_info
-        # if plant ticks for id is greater than current ticks of plant id
-        else:
-            current_plant_ticks = this_garden[this_plant_id]["score"]
-            if this_plant.ticks >= current_plant_ticks:
-                this_garden[this_plant_id] = plant_info
+    def update_garden_db(self, this_plant):
+        # insert or update this plant id's entry in DB
+        # TODO: is this needed?
+        self.init_database()
+        age_formatted = self.plant_age_convert(this_plant)
+        conn = sqlite3.connect(self.garden_db_path)
+        c = conn.cursor()
+        # try to insert or replace
+        update_query = """INSERT OR REPLACE INTO garden (
+                    plant_id, owner, description, age, score, is_dead
+                    ) VALUES (
+                    '{pid}', '{pown}', '{pdes}', '{page}', {psco}, {pdead}
+                    )
+                    """.format(pid = this_plant.plant_id,
+                            pown = this_plant.owner,
+                            pdes = this_plant.parse_plant(),
+                            page = age_formatted,
+                            psco = str(this_plant.ticks),
+                            pdead = int(this_plant.dead))
+        c.execute(update_query)
+        conn.commit()
+        conn.close()
 
-        # dump garden file
-        with open(self.garden_file_path, 'wb') as f:
-            pickle.dump(this_garden, f, protocol=2)
-        # dump json file
+    def retrieve_garden_from_db(self):
+        # Builds a dict of dicts from garden sqlite db
+        garden_dict = {}
+        conn = sqlite3.connect(self.garden_db_path)
+        # Need to allow write permissions by others
+        conn.row_factory = sqlite3.Row
+        c = conn.cursor()
+        c.execute('SELECT * FROM garden ORDER BY owner')
+        tuple_list = c.fetchall()
+        conn.close()
+        # Building dict from table rows
+        for item in tuple_list:
+            garden_dict[item[0]] = {
+                "owner":item[1],
+                "description":item[2],
+                "age":item[3],
+                "score":item[4],
+                "dead":item[5],
+            }
+        return garden_dict
+
+    def update_garden_json(self):
+        this_garden = self.retrieve_garden_from_db()
         with open(self.garden_json_path, 'w') as outfile:
             json.dump(this_garden, outfile)
-
-        return new_file_check
+        pass
 
     def save_plant(self, this_plant):
         # create savefile
@@ -465,6 +498,9 @@ class DataManager(object):
             json.dump(plant_info, outfile)
 
     def harvest_plant(self, this_plant):
+        # TODO: could just use a sqlite query to retrieve all of user's dead
+        # plants
+
         # harvest is a dict of dicts
         # harvest contains one entry for each plant id
         age_formatted = self.plant_age_convert(this_plant)
@@ -504,8 +540,7 @@ if __name__ == '__main__':
         my_data.data_write_json(my_plant)
     my_plant.start_life()
     my_data.start_threads(my_plant)
-    botany_menu = CursedMenu(my_plant,my_data.garden_file_path)
-
+    botany_menu = CursedMenu(my_plant,my_data)
     my_data.save_plant(my_plant)
     my_data.data_write_json(my_plant)
-    my_data.garden_update(my_plant)
+    my_data.update_garden_db(my_plant)

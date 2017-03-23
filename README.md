@@ -29,7 +29,7 @@ If your plant goes 5 days without water, it will die!
 * Curses-based menu system, optimized for 80x24 terminal
 * ASCII art display of plant
 * Persistent aging system that allows your plant to grow even when app is closed
-* Community garden of other users' plants (for shared unix servers)
+* SQLite Community Garden of other users' plants (for shared unix servers)
 * Data file is created in the user's home (~) directory, along with a JSON file that can be used in other apps.
 
 ```
@@ -49,7 +49,6 @@ If your plant goes 5 days without water, it will die!
 
 ### to-dos
 * Finish garden feature
- * Switch to database instead of .dat file
  * Allows you to water neighbor's plants
 * Harvest plant at end of life (gather seeds)
  * Create harvest file with a log of all previous plants

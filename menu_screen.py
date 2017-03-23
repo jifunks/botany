@@ -1,9 +1,9 @@
-import curses, os, traceback, threading, time, datetime, pickle, operator, random
+import curses, os, traceback, threading, time, datetime, pickle, operator, random, sqlite3
 
 class CursedMenu(object):
     #TODO: name your plant
     '''A class which abstracts the horrors of building a curses-based menu system'''
-    def __init__(self, this_plant, this_garden_file_path):
+    def __init__(self, this_plant, this_data):
         '''Initialization'''
         self.initialized = False
         self.screen = curses.initscr()
@@ -13,7 +13,7 @@ class CursedMenu(object):
         curses.curs_set(0)
         self.screen.keypad(1)
         self.plant = this_plant
-        self.garden_file_path = this_garden_file_path
+        self.user_data = this_data
         self.plant_string = self.plant.parse_plant()
         self.plant_ticks = str(self.plant.ticks)
         self.exit = False
@@ -184,7 +184,6 @@ class CursedMenu(object):
 
     def update_plant_live(self):
         # updates plant data on menu screen, live!
-        # will eventually use this to display ascii art...
         while not self.exit:
             self.plant_string = self.plant.parse_plant()
             self.plant_ticks = str(self.plant.ticks)
@@ -194,12 +193,12 @@ class CursedMenu(object):
             time.sleep(1)
 
     def get_user_input(self):
-        # gets the user's input and acts appropriately
+        # gets the user's input
         try:
             user_in = self.screen.getch() # Gets user input
         except Exception as e:
             self.__exit__()
-        # DEBUG KEYS
+        # DEBUG KEYS - enable to see curses key codes
         # self.screen.addstr(1, 1, str(user_in), curses.A_NORMAL)
         # self.screen.refresh()
 
@@ -252,9 +251,8 @@ class CursedMenu(object):
         clear_bar = " " * (self.maxx-2) + "\n"
         clear_block = clear_bar * 5
         control_keys = [curses.KEY_UP, curses.KEY_DOWN, curses.KEY_LEFT, curses.KEY_RIGHT]
-        # load data
-        with open(self.garden_file_path, 'rb') as f:
-            this_garden = pickle.load(f)
+        # load data from sqlite db
+        this_garden = self.user_data.retrieve_garden_from_db()
         # format data
         plant_table_pages = []
         if self.infotoggle != 2:
@@ -385,6 +383,7 @@ class CursedMenu(object):
 
         this_stage_descriptions = stage_descriptions[this_stage]
         description_num = random.randint(0,len(this_stage_descriptions) - 1)
+        # If not fully grown
         if this_stage <= 4:
             # Growth hint
             if this_stage >= 1:
@@ -398,6 +397,7 @@ class CursedMenu(object):
 
         output_text += this_stage_descriptions[description_num] + "\n"
 
+        # if seedling
         if this_stage == 1:
             species_options = [this_plant.species_dict[this_plant.species],
                     this_plant.species_dict[(this_plant.species+3) % len(this_plant.species_dict)],
@@ -406,12 +406,14 @@ class CursedMenu(object):
             plant_hint = "It could be a(n) " + species_options[0] + ", " + species_options[1] + ", or " + species_options[2]
             output_text += plant_hint + ".\n"
 
+        # if young plant
         if this_stage == 2:
             # TODO: more descriptive rarity
             if this_plant.rarity >= 2:
                 rarity_hint = "You feel like your plant is special."
                 output_text += rarity_hint + ".\n"
 
+        # if mature plant
         if this_stage == 3:
             color_options = [this_plant.color_dict[this_plant.color],
                     this_plant.color_dict[(this_plant.color+3) % len(this_plant.color_dict)],
@@ -424,16 +426,18 @@ class CursedMenu(object):
 
     def draw_plant_description(self, this_plant):
         clear_bar = " " * (self.maxx-2) + "\n"
-        # load data
-        # format data
+        # If menu is currently showing something other than the description
         if self.infotoggle != 1:
+            # Clear lines before printing description
             output_string = clear_bar * (self.maxy - 15)
             for y, line in enumerate(output_string.splitlines(), 2):
                 self.screen.addstr(y+12, 2, line)
             self.screen.refresh()
+            # get plant description before printing
             output_string = self.get_plant_description(this_plant)
             self.infotoggle = 1
         else:
+            # otherwise just set data as blanks
             output_string = clear_bar * 3
             self.infotoggle = 0
 
@@ -442,6 +446,7 @@ class CursedMenu(object):
         self.screen.refresh()
 
     def draw_instructions(self):
+        # TODO: tidy this up
         if not self.instructiontoggle:
             instructions_txt = """welcome to botany. you've been given a seed
 that will grow into a beautiful plant. check
@@ -466,10 +471,15 @@ available in the readme :)
             self.screen.addstr(self.maxy-12+y,self.maxx-47, line)
         self.screen.refresh()
 
+    def harvest_confirmation():
+        #TODO: confirm users want to restart when harvesting
+        pass
+
     def handle_request(self, request):
         '''this is where you do things with the request'''
         if request == None: return
         if request == "harvest":
+
             self.plant.start_over()
         if request == "water":
             self.plant.water()
