@@ -2,18 +2,13 @@ from __future__ import division
 import time
 import pickle
 import json
-import math
-import sys
 import os
 import random
 import getpass
 import threading
 import errno
 import uuid
-import fcntl
 import sqlite3
-from collections import OrderedDict
-from operator import itemgetter
 from menu_screen import *
 
 # development plan
@@ -260,8 +255,7 @@ class Plant(object):
         self.kill_plant()
         while self.write_lock:
             # Wait for garden writer to unlock
-            # garden datafile needs to register that plant has died before
-            # allowing the user to reset
+            # garden db needs to update before allowing the user to reset
             pass
         if not self.write_lock:
             self.new_seed(self.file_name)
@@ -482,7 +476,6 @@ class DataManager(object):
     def data_write_json(self, this_plant):
         # create personal json file for user to use outside of the game (website?)
         json_file = os.path.join(self.botany_dir,self.this_user + '_plant_data.json')
-        json_leaderboard = os.path.join(self.game_dir + '_garden.json')
         # also updates age
         age_formatted = self.plant_age_convert(this_plant)
         plant_info = {
@@ -518,6 +511,7 @@ class DataManager(object):
         else:
             this_harvest = {}
             new_file_check = True
+
         this_harvest[this_plant_id] = plant_info
 
         # dump harvest file
@@ -540,6 +534,7 @@ if __name__ == '__main__':
         my_data.data_write_json(my_plant)
     my_plant.start_life()
     my_data.start_threads(my_plant)
+    # TODO: curses wrapper
     botany_menu = CursedMenu(my_plant,my_data)
     my_data.save_plant(my_plant)
     my_data.data_write_json(my_plant)

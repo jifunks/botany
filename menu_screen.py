@@ -1,4 +1,9 @@
-import curses, os, traceback, threading, time, datetime, pickle, operator, random, sqlite3
+import curses
+import os
+import traceback
+import threading
+import time
+import random
 
 class CursedMenu(object):
     #TODO: name your plant
@@ -17,8 +22,6 @@ class CursedMenu(object):
         self.plant_string = self.plant.parse_plant()
         self.plant_ticks = str(self.plant.ticks)
         self.exit = False
-        self.instructiontoggle = False
-        self.gardenmenutoggle = False
         self.infotoggle = 0
         self.maxy, self.maxx = self.screen.getmaxyx()
         # Highlighted and Normal line definitions
@@ -73,7 +76,7 @@ class CursedMenu(object):
         except Exception as exception:
             # Makes sure data is saved in event of a crash due to window resizing
             self.screen.clear()
-            self.screen.addstr(0,0,"Enlarge terminal!")
+            self.screen.addstr(0, 0, "Enlarge terminal!", curses.A_NORMAL)
             self.screen.refresh()
             self.__exit__()
             traceback.print_exc()
@@ -91,7 +94,7 @@ class CursedMenu(object):
         # Also calls __exit__, but adds traceback after
         except Exception as exception:
             self.screen.clear()
-            self.screen.addstr(0,0,"Enlarge terminal!")
+            self.screen.addstr(0, 0, "Enlarge terminal!", curses.A_NORMAL)
             self.screen.refresh()
             self.__exit__()
             #traceback.print_exc()
@@ -104,7 +107,7 @@ class CursedMenu(object):
         this_string = this_file.readlines()
         this_file.close()
         for y, line in enumerate(this_string, 2):
-            self.screen.addstr(ypos+y,xpos,line, curses.A_NORMAL)
+            self.screen.addstr(ypos+y, xpos, line, curses.A_NORMAL)
         # self.screen.refresh()
 
     def draw_plant_ascii(self, this_plant):
@@ -148,25 +151,25 @@ class CursedMenu(object):
     def draw_default(self):
         # draws default menu
         clear_bar = " " * (int(self.maxx*2/3))
-        self.screen.addstr(2,2, self.title, curses.A_STANDOUT) # Title for this menu
-        self.screen.addstr(4,2, self.subtitle, curses.A_BOLD) #Subtitle for this menu
+        self.screen.addstr(2, 2, self.title, curses.A_STANDOUT) # Title for this menu
+        self.screen.addstr(4, 2, self.subtitle, curses.A_BOLD) #Subtitle for this menu
         # clear menu on screen
         for index in range(len(self.options)+1):
-            self.screen.addstr(5+index,4, clear_bar, curses.A_NORMAL)
+            self.screen.addstr(5+index, 4, clear_bar, curses.A_NORMAL)
         # display all the menu items, showing the 'pos' item highlighted
         for index in range(len(self.options)):
             textstyle = self.normal
             if index == self.selected:
                 textstyle = self.highlighted
-            self.screen.addstr(5+index,4, clear_bar, curses.A_NORMAL)
-            self.screen.addstr(5+index,4, "%d - %s" % (index+1, self.options[index]), textstyle)
+            self.screen.addstr(5+index ,4, clear_bar, curses.A_NORMAL)
+            self.screen.addstr(5+index ,4, "%d - %s" % (index+1, self.options[index]), textstyle)
 
-        self.screen.addstr(11,2, clear_bar, curses.A_NORMAL)
-        self.screen.addstr(12,2, clear_bar, curses.A_NORMAL)
-        self.screen.addstr(11,2, "plant: ", curses.A_DIM)
-        self.screen.addstr(11,9, self.plant_string, curses.A_NORMAL)
-        self.screen.addstr(12,2, "score: ", curses.A_DIM)
-        self.screen.addstr(12,9, self.plant_ticks, curses.A_NORMAL)
+        self.screen.addstr(11, 2, clear_bar, curses.A_NORMAL)
+        self.screen.addstr(12, 2, clear_bar, curses.A_NORMAL)
+        self.screen.addstr(11, 2, "plant: ", curses.A_DIM)
+        self.screen.addstr(11, 9, self.plant_string, curses.A_NORMAL)
+        self.screen.addstr(12, 2, "score: ", curses.A_DIM)
+        self.screen.addstr(12, 9, self.plant_ticks, curses.A_NORMAL)
 
         if not self.plant.dead:
             if int(time.time()) <= self.plant.watered_timestamp + 24*3600:
@@ -198,7 +201,7 @@ class CursedMenu(object):
             user_in = self.screen.getch() # Gets user input
         except Exception as e:
             self.__exit__()
-        # DEBUG KEYS - enable to see curses key codes
+        ## DEBUG KEYS - enable to see curses key codes
         # self.screen.addstr(1, 1, str(user_in), curses.A_NORMAL)
         # self.screen.refresh()
 
@@ -220,12 +223,15 @@ class CursedMenu(object):
             return
 
         # increment or Decrement
-        down_keys = [curses.KEY_DOWN, 14, 106]
-        up_keys = [curses.KEY_UP, 16, 107]
+        down_keys = [curses.KEY_DOWN, 14, ord('j')]
+        up_keys = [curses.KEY_UP, 16, ord('k')]
+
         if user_in in down_keys: # down arrow
             self.selected += 1
         if user_in in up_keys: # up arrow
             self.selected -=1
+
+        # modulo to wrap around
         self.selected = self.selected % len(self.options)
         return
 
@@ -247,35 +253,25 @@ class CursedMenu(object):
         return paginated_list
 
     def draw_garden(self):
-        # draws neighborhood
-        clear_bar = " " * (self.maxx-2) + "\n"
-        clear_block = clear_bar * 5
-        control_keys = [curses.KEY_UP, curses.KEY_DOWN, curses.KEY_LEFT, curses.KEY_RIGHT]
+        # draws community garden
         # load data from sqlite db
         this_garden = self.user_data.retrieve_garden_from_db()
         # format data
+        self.clear_info_pane()
         plant_table_pages = []
         if self.infotoggle != 2:
             # if infotoggle isn't 2, the screen currently displays other stuff
-            # we want to prep the screen for showing the garden
-            # Clear text area of other text (look info, etc) first
-            for y, line in enumerate(clear_block.splitlines(), 2):
-                self.screen.addstr(y+12, 2, line)
-                self.screen.refresh()
             plant_table_pages = self.format_garden_data(this_garden)
             self.infotoggle = 2
         else:
             # the screen IS currently showing the garden (1 page), make the
             # text a bunch of blanks to clear it out
-            big_clear_block = clear_bar * (self.maxy - 14)
-            plant_table_pages.append(big_clear_block.splitlines())
             self.infotoggle = 0
 
         # print garden information OR clear it
         for page_num, page in enumerate(plant_table_pages, 1):
             # Print page text
-            for y, line in enumerate(page, 2):
-                self.screen.addstr(y+12, 2, line)
+            self.draw_info_text(page)
             if len(plant_table_pages) > 1:
                 # Multiple pages, paginate and require keypress
                 page_text = "(%d/%d) --- press any key ---" % (page_num, len(plant_table_pages))
@@ -283,8 +279,7 @@ class CursedMenu(object):
                 self.screen.getch()
                 self.screen.refresh()
                 # Clear page before drawing next
-                for y, line in enumerate(range(self.maxy-16), 2):
-                    self.screen.addstr(y+12, 2, clear_bar)
+                self.clear_info_pane()
                 self.infotoggle = 0
                 self.screen.refresh()
             else:
@@ -425,29 +420,22 @@ class CursedMenu(object):
         return output_text
 
     def draw_plant_description(self, this_plant):
-        clear_bar = " " * (self.maxx-2) + "\n"
         # If menu is currently showing something other than the description
+        self.clear_info_pane()
         if self.infotoggle != 1:
-            # Clear lines before printing description
-            output_string = clear_bar * (self.maxy - 15)
-            for y, line in enumerate(output_string.splitlines(), 2):
-                self.screen.addstr(y+12, 2, line)
-            self.screen.refresh()
             # get plant description before printing
             output_string = self.get_plant_description(this_plant)
+            self.draw_info_text(output_string)
             self.infotoggle = 1
         else:
-            # otherwise just set data as blanks
-            output_string = clear_bar * 3
+            # otherwise just set toggle
             self.infotoggle = 0
 
-        for y, line in enumerate(output_string.splitlines(), 2):
-            self.screen.addstr(y+12, 2, line)
-        self.screen.refresh()
 
     def draw_instructions(self):
-        # TODO: tidy this up
-        if not self.instructiontoggle:
+        # Draw instructions on screen
+        self.clear_info_pane()
+        if self.infotoggle != 4:
             instructions_txt = """welcome to botany. you've been given a seed
 that will grow into a beautiful plant. check
 in and water your plant every 24h to keep it
@@ -456,31 +444,49 @@ plant depends on you to live! more info is
 available in the readme :)
                                cheers,
                                curio"""
-            self.instructiontoggle = not self.instructiontoggle
+            self.draw_info_text(instructions_txt)
+            self.infotoggle = 4
         else:
-            instructions_txt = """                                           
-                                            
-                                            
-                                            
-                                            
-                                            
-                                            
-                                        """
-            self.instructiontoggle = not self.instructiontoggle
-        for y, line in enumerate(instructions_txt.splitlines(), 2):
-            self.screen.addstr(self.maxy-12+y,self.maxx-47, line)
+            self.infotoggle = 0
+
+    def clear_info_pane(self):
+        # Clears bottom part of screen
+        clear_bar = " " * (self.maxx-2) + "\n"
+        clear_block = clear_bar * (self.maxy - 15)
+        for y, line in enumerate(clear_block.splitlines(), 2):
+            self.screen.addstr(y+12, 2, line, curses.A_NORMAL)
         self.screen.refresh()
 
-    def harvest_confirmation():
-        #TODO: confirm users want to restart when harvesting
-        pass
+    def draw_info_text(self, info_text):
+        if type(info_text) is str:
+            info_text = info_text.splitlines()
+
+        for y, line in enumerate(info_text, 2):
+            self.screen.addstr(y+12, 2, line, curses.A_NORMAL)
+        self.screen.refresh()
+
+    def harvest_confirmation(self):
+        self.clear_info_pane()
+        # get plant description before printing
+        harvest_text = "If you harvest your plant you'll start over from a seed.\nContinue? (Y/n)"
+        self.draw_info_text(harvest_text)
+        try:
+            user_in = self.screen.getch() # Gets user input
+        except Exception as e:
+            self.__exit__()
+
+        if user_in == ord('Y'):
+            self.plant.start_over()
+        else:
+            pass
+        self.clear_info_pane()
 
     def handle_request(self, request):
-        '''this is where you do things with the request'''
+        # Menu options call functions here
         if request == None: return
         if request == "harvest":
-
-            self.plant.start_over()
+            #TODO: should harvest be separate from dead plant start over?
+            self.harvest_confirmation()
         if request == "water":
             self.plant.water()
         if request == "look":

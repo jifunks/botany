@@ -8,6 +8,8 @@ A command line, realtime, community plant buddy.
 You've been given a seed that will grow into a beautiful plant.
 Check in and water your plant every 24h to keep it growing. 5 days without water = death. Your plant depends on you to live!
 
+*"We do not "come into" this world; we come out of it, as leaves from a tree." - Alan Watts*
+
 *(work in progress)*
 
 ## getting started
@@ -27,10 +29,12 @@ If your plant goes 5 days without water, it will die!
 
 ## features
 * Curses-based menu system, optimized for 80x24 terminal
-* ASCII art display of plant
+* 20+ Species of plants w/ ASCII art for each
 * Persistent aging system that allows your plant to grow even when app is closed
+* Random and rare mutations can occur at any point in a plant's life
 * SQLite Community Garden of other users' plants (for shared unix servers)
-* Data file is created in the user's home (~) directory, along with a JSON file that can be used in other apps.
+* Data files are created in the user's home (~) directory, along with a JSON file that can be used in other apps.
+ * Data is created for your current plant and harvested plants
 
 ```
 {
@@ -49,9 +53,8 @@ If your plant goes 5 days without water, it will die!
 
 ### to-dos
 * Finish garden feature
- * Allows you to water neighbor's plants
+ * Water neighbor's plants
 * Harvest plant at end of life (gather seeds)
- * Create harvest file with a log of all previous plants
  * Plant pollination - cross-breed with neighbor plants to unlock second-gen plants
  * Share seeds with other users
 * Global events
