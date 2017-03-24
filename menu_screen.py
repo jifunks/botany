@@ -13,7 +13,7 @@ class CursedMenu(object):
         self.initialized = False
         self.screen = curses.initscr()
         curses.noecho()
-        curses.cbreak()
+        curses.raw()
         curses.start_color()
         curses.curs_set(0)
         self.screen.keypad(1)
