@@ -8,7 +8,7 @@ A command line, realtime, community plant buddy.
 You've been given a seed that will grow into a beautiful plant.
 Check in and water your plant every 24h to keep it growing. 5 days without water = death. Your plant depends on you to live!
 
-*"We do not "come into" this world; we come out of it, as leaves from a tree." - Alan Watts*
+*"We do not 'come into' this world; we come out of it, as leaves from a tree." - Alan Watts*
 
 *(work in progress)*
 
