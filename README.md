@@ -34,7 +34,7 @@ If your plant goes 5 days without water, it will die!
 * Random and rare mutations can occur at any point in a plant's life
 * SQLite Community Garden of other users' plants (for shared unix servers)
 * Data files are created in the user's home (~) directory, along with a JSON file that can be used in other apps.
- * Data is created for your current plant and harvested plants
+  * Data is created for your current plant and harvested plants
 
 ```
 {
@@ -53,12 +53,12 @@ If your plant goes 5 days without water, it will die!
 
 ### to-dos
 * Finish garden feature
- * Water neighbor's plants
+  * Water neighbor's plants
 * Harvest plant at end of life (gather seeds)
- * Plant pollination - cross-breed with neighbor plants to unlock second-gen plants
- * Share seeds with other users
+  * Plant pollination - cross-breed with neighbor plants to unlock second-gen plants
+  * Share seeds with other users
 * Global events
- * Server API to have rain storms, heat waves, insects
+  * Server API to have rain storms, heat waves, insects
 * Name your plant
 * Reward for keeping plant alive
   * Hybridization, multiple generations, lineage tracking

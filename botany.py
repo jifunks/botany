@@ -11,31 +11,6 @@ import uuid
 import sqlite3
 from menu_screen import *
 
-# development plan
-
-# build plant lifecycle just stepping through
-#   - how long should each stage last ? thinking realistic lmao
-#   seed -> seedling -> sprout -> young plant -> mature plant -> flower ->
-#   pollination -> fruit -> seeds
-#   - TODO: pollination and end of life
-#
-# events
-# - heatwave
-# - rain
-# - bugs
-#
-# build multiplayer
-# neighborhood system
-# - list sorted by plantid that wraps so everybody has 2 neighbors :)
-# - can water neighbors plant once (have to choose which)
-# - pollination - seed is combination of your plant and neighbor plant
-#   - create rarer species by diff gens
-# - if neighbor plant dies, node will be removed from list
-
-# Make it fun to keep growing after seed level (what is reward for continuing
-# instead of starting over?
-# Reward for bringing plant to full life - second gen plant w/ more variety
-
 class Plant(object):
     # This is your plant!
     stage_dict = {
@@ -186,7 +161,7 @@ class Plant(object):
         legendary_max = rare_max + legendary_range
         godly_max = CONST_RARITY_MAX
 
-        if   0 <= rare_seed <= common_max:
+        if 0 <= rare_seed <= common_max:
             rarity = 0
         elif common_max < rare_seed <= uncommon_max:
             rarity = 1
@@ -199,8 +174,8 @@ class Plant(object):
         return rarity
 
     def dead_check(self):
-        time_delta_watered = int(time.time()) - self.watered_timestamp
         # if it has been >5 days since watering, sorry plant is dead :(
+        time_delta_watered = int(time.time()) - self.watered_timestamp
         if time_delta_watered > (5 * (24 * 3600)):
             self.dead = True
         return self.dead
@@ -238,10 +213,6 @@ class Plant(object):
         # Increase plant growth stage
         if self.stage < (len(self.stage_dict)-1):
             self.stage += 1
-            # do stage growth stuff
-        else:
-            # do stage 5 stuff (after fruiting)
-            pass
 
     def water(self):
         # Increase plant growth stage
@@ -419,7 +390,6 @@ class DataManager(object):
 
     def update_garden_db(self, this_plant):
         # insert or update this plant id's entry in DB
-        # TODO: is this needed?
         self.init_database()
         age_formatted = self.plant_age_convert(this_plant)
         conn = sqlite3.connect(self.garden_db_path)
