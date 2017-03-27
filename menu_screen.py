@@ -189,7 +189,7 @@ class CursedMenu(object):
         # don't allow negative value
         water_left_pct = max(0, water_left_pct)
         water_left = int(math.ceil(water_left_pct * 10))
-        water_string = "(" + (")" * water_left) + ("." * (10 - water_left)) + ") " + str(int(water_left_pct * 100)) + "%"
+        water_string = "(" + (")" * water_left) + ("." * (10 - water_left)) + ") " + str(int(water_left_pct * 100)) + "% "
         return water_string
 
 
@@ -441,14 +441,15 @@ class CursedMenu(object):
         # Draw instructions on screen
         self.clear_info_pane()
         if self.infotoggle != 4:
-            instructions_txt = """welcome to botany. you've been given a seed
-that will grow into a beautiful plant. check
-in and water your plant every 24h to keep it
-growing. 5 days without water = death. your
-plant depends on you to live! more info is
-available in the readme :)
-                               cheers,
-                               curio"""
+            instructions_txt = ("welcome to botany. you've been given a seed\n"
+                                "that will grow into a beautiful plant. check\n"
+                                "in and water your plant every 24h to keep it\n"
+                                "growing. 5 days without water = death. your\n"
+                                "plant depends on you to live! more info is\n"
+                                "available in the readme :)\n"
+                                "                               cheers,\n"
+                                "                               curio\n"
+                                )
             self.draw_info_text(instructions_txt)
             self.infotoggle = 4
         else:
