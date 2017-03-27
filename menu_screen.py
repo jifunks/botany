@@ -250,10 +250,13 @@ class CursedMenu(object):
             if this_garden[plant_id]:
                 if not this_garden[plant_id]["dead"]:
                     this_plant = this_garden[plant_id]
-                    plant_table += this_plant["owner"] + " - "
-                    plant_table += this_plant["age"] + " - "
-                    plant_table += str(this_plant["score"]) + "p - "
-                    plant_table += this_plant["description"] + "\n"
+                    entry = "{:14} - {:>16} - {:>7}p - {}\n".format(
+                        this_plant["owner"],
+                        this_plant["age"], 
+                        this_plant["score"],
+                        this_plant["description"]
+                    )
+                    plant_table += entry
         # build list of n entries per page
         entries_per_page = self.maxy - 16
         garden_list = plant_table.splitlines()
