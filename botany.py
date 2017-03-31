@@ -11,6 +11,12 @@ import uuid
 import sqlite3
 from menu_screen import *
 
+# TODO:
+# - Switch from personal data file to table in DB
+# - Table in DB would allow others to modify (personal files might be
+# permission locked)
+# - this is a good idea.
+
 class Plant(object):
     # This is your plant!
     stage_dict = {
