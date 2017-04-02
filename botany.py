@@ -1,3 +1,5 @@
+#!/usr/bin/python2
+
 from __future__ import division
 import time
 import pickle
@@ -462,7 +464,17 @@ class DataManager(object):
                 "is_dead":this_plant.dead,
                 "last_watered":this_plant.watered_timestamp,
                 "file_name":this_plant.file_name,
+                "stage": this_plant.stage_dict[this_plant.stage],
         }
+        if this_plant.stage >= 3:
+            plant_info["rarity"] = this_plant.rarity_dict[this_plant.rarity]
+        if this_plant.mutation != 0:
+            plant_info["mutation"] = this_plant.mutation_dict[this_plant.mutation]
+        if this_plant.stage >= 4:
+            plant_info["color"] = this_plant.color_dict[this_plant.color]
+        if this_plant.stage >= 2:
+            plant_info["species"] = this_plant.species_dict[this_plant.species]
+        
         with open(json_file, 'w') as outfile:
             json.dump(plant_info, outfile)
 
