@@ -145,8 +145,11 @@ class CursedMenu(object):
         elif this_plant.stage == 2:
             this_filename = plant_art_dict[this_plant.species]+'1.txt'
             self.ascii_render(this_filename, ypos, xpos)
-        elif this_plant.stage >= 3:
+        elif this_plant.stage == 3:
             this_filename = plant_art_dict[this_plant.species]+'2.txt'
+            self.ascii_render(this_filename, ypos, xpos)
+        elif this_plant.stage >= 4:
+            this_filename = plant_art_dict[this_plant.species]+'3.txt'
             self.ascii_render(this_filename, ypos, xpos)
 
     def draw_default(self):
