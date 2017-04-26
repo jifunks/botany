@@ -47,8 +47,6 @@ class CursedMenu(object):
         self.draw_menu()
 
     def update_options(self):
-        # TODO: should this have separate options if plant dies vs plant is
-        # last stage?
         # Makes sure you can get a new plant if it dies
         if self.plant.dead:
             if "harvest" not in self.options:
@@ -69,7 +67,6 @@ class CursedMenu(object):
 
     def draw(self):
         # Draw the menu and lines
-        # TODO: display refresh is hacky. Could be more precise
         self.screen.refresh()
         try:
             self.draw_default()
@@ -145,10 +142,10 @@ class CursedMenu(object):
         elif this_plant.stage == 2:
             this_filename = plant_art_dict[this_plant.species]+'1.txt'
             self.ascii_render(this_filename, ypos, xpos)
-        elif this_plant.stage == 3:
+        elif this_plant.stage == 3 or this_plant.stage == 5:
             this_filename = plant_art_dict[this_plant.species]+'2.txt'
             self.ascii_render(this_filename, ypos, xpos)
-        elif this_plant.stage >= 4:
+        elif this_plant.stage == 4:
             this_filename = plant_art_dict[this_plant.species]+'3.txt'
             self.ascii_render(this_filename, ypos, xpos)
 
@@ -175,6 +172,7 @@ class CursedMenu(object):
         self.screen.addstr(12, 2, "score: ", curses.A_DIM)
         self.screen.addstr(12, 9, self.plant_ticks, curses.A_NORMAL)
 
+        # display fancy water gauge
         if not self.plant.dead:
             water_gauge_str = self.water_gauge()
             self.screen.addstr(5,14, water_gauge_str, curses.A_NORMAL)
@@ -184,7 +182,6 @@ class CursedMenu(object):
 
         # draw cute ascii from files
         self.draw_plant_ascii(self.plant)
-        # self.ascii_render("sun.txt",-2,self.maxx-14)
 
     def water_gauge(self):
         # build nice looking water gauge
@@ -212,7 +209,7 @@ class CursedMenu(object):
             user_in = self.screen.getch() # Gets user input
         except Exception as e:
             self.__exit__()
-        ## DEBUG KEYS - enable to see curses key codes
+        ## DEBUG KEYS - enable these lines to see curses key codes
         # self.screen.addstr(1, 1, str(user_in), curses.A_NORMAL)
         # self.screen.refresh()
 
@@ -255,7 +252,7 @@ class CursedMenu(object):
                     this_plant = this_garden[plant_id]
                     entry = "{:14} - {:>16} - {:>7}p - {}\n".format(
                         this_plant["owner"],
-                        this_plant["age"], 
+                        this_plant["age"],
                         this_plant["score"],
                         this_plant["description"]
                     )
@@ -414,7 +411,6 @@ class CursedMenu(object):
 
         # if young plant
         if this_stage == 2:
-            # TODO: more descriptive rarity
             if this_plant.rarity >= 2:
                 rarity_hint = "You feel like your plant is special."
                 output_text += rarity_hint + ".\n"
@@ -441,7 +437,6 @@ class CursedMenu(object):
         else:
             # otherwise just set toggle
             self.infotoggle = 0
-
 
     def draw_instructions(self):
         # Draw instructions on screen
@@ -497,7 +492,6 @@ class CursedMenu(object):
         # Menu options call functions here
         if request == None: return
         if request == "harvest":
-            #TODO: should harvest be separate from dead plant start over?
             self.harvest_confirmation()
         if request == "water":
             self.plant.water()
