@@ -119,7 +119,7 @@ class Plant(object):
         39: 'colossal',
     }
 
-    def __init__(self, this_filename):
+    def __init__(self, this_filename, generation=1):
         # Constructor
         self.plant_id = str(uuid.uuid4())
         self.life_stages = (3600*24, (3600*24)*3, (3600*24)*10, (3600*24)*20, (3600*24)*30)
@@ -130,6 +130,7 @@ class Plant(object):
         self.rarity = self.rarity_check()
         self.ticks = 0
         self.age_formatted = "0"
+        self.generation = generation
         self.dead = False
         self.write_lock = False
         self.owner = getpass.getuser()
@@ -139,6 +140,11 @@ class Plant(object):
         # must water plant first day
         self.watered_timestamp = int(time.time())-(24*3600)-1
         self.watered_24h = False
+
+    def migrate_properties(self):
+        # Migrates old data files to new
+        if not hasattr(self, 'generation'):
+            self.generation = 1
 
     def parse_plant(self):
         # Converts plant data to human-readable format
@@ -213,10 +219,6 @@ class Plant(object):
         else:
             return False
 
-    def new_seed(self,this_filename):
-        # Creates life after death
-        self.__init__(this_filename)
-
     def growth(self):
         # Increase plant growth stage
         if self.stage < (len(self.stage_dict)-1):
@@ -230,6 +232,13 @@ class Plant(object):
 
     def start_over(self):
         # After plant reaches final stage, given option to restart
+        # increment generation only if previous stage is final stage and plant
+        # is alive
+        if not self.dead:
+            next_generation = self.generation + 1
+        else:
+            next_generation = 1
+
         self.write_lock = True
         self.kill_plant()
         while self.write_lock:
@@ -237,7 +246,7 @@ class Plant(object):
             # garden db needs to update before allowing the user to reset
             pass
         if not self.write_lock:
-            self.new_seed(self.file_name)
+            self.__init__(self.file_name, next_generation)
 
     def kill_plant(self):
         self.dead = True
@@ -345,6 +354,10 @@ class DataManager(object):
         # load savefile
         with open(self.savefile_path, 'rb') as f:
             this_plant = pickle.load(f)
+
+        # migrate data structure to create data for empty/nonexistent plant
+        # properties
+        this_plant.migrate_properties()
 
         # get status since last login
         is_dead = this_plant.dead_check()
@@ -474,7 +487,7 @@ class DataManager(object):
             plant_info["color"] = this_plant.color_dict[this_plant.color]
         if this_plant.stage >= 2:
             plant_info["species"] = this_plant.species_dict[this_plant.species]
-        
+
         with open(json_file, 'w') as outfile:
             json.dump(plant_info, outfile)
 
@@ -520,9 +533,9 @@ if __name__ == '__main__':
     else:
         my_plant = Plant(my_data.savefile_path)
         my_data.data_write_json(my_plant)
+    # my_plant is either a fresh plant or an existing plant at this point
     my_plant.start_life()
     my_data.start_threads(my_plant)
-    # TODO: curses wrapper
     botany_menu = CursedMenu(my_plant,my_data)
     my_data.save_plant(my_plant)
     my_data.data_write_json(my_plant)

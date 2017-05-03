@@ -26,7 +26,7 @@ class CursedMenu(object):
         self.infotoggle = 0
         self.maxy, self.maxx = self.screen.getmaxyx()
         # Highlighted and Normal line definitions
-        curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
+        self.define_colors()
         self.highlighted = curses.color_pair(1)
         self.normal = curses.A_NORMAL
         # Threaded screen update for live changes
@@ -35,6 +35,17 @@ class CursedMenu(object):
         screen_thread.start()
         self.screen.clear()
         self.show(["water","look","garden","instructions"], title=' botany ', subtitle='options')
+
+    def define_colors(self):
+        # set curses color pairs manually
+        curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
+        curses.init_pair(2, curses.COLOR_WHITE, curses.COLOR_BLACK)
+        curses.init_pair(3, curses.COLOR_GREEN, curses.COLOR_BLACK)
+        curses.init_pair(4, curses.COLOR_BLUE, curses.COLOR_BLACK)
+        curses.init_pair(5, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
+        curses.init_pair(6, curses.COLOR_YELLOW, curses.COLOR_BLACK)
+        curses.init_pair(7, curses.COLOR_RED, curses.COLOR_BLACK)
+        curses.init_pair(8, curses.COLOR_CYAN, curses.COLOR_BLACK)
 
     def show(self, options, title, subtitle):
         # Draws a menu with parameters
@@ -465,6 +476,7 @@ class CursedMenu(object):
         self.screen.refresh()
 
     def draw_info_text(self, info_text):
+        # print lines of text to info pane at bottom of screen
         if type(info_text) is str:
             info_text = info_text.splitlines()
 
@@ -475,7 +487,13 @@ class CursedMenu(object):
     def harvest_confirmation(self):
         self.clear_info_pane()
         # get plant description before printing
-        harvest_text = "If you harvest your plant you'll start over from a seed.\nContinue? (Y/n)"
+        max_stage = len(self.plant.stage_dict) - 1
+        harvest_text = ""
+        if not self.plant.dead:
+            if self.plant.stage == max_stage:
+                harvest_text += "Congratulations! You raised your plant to its final stage of growth.\n"
+                harvest_text += "Generation: {}\n".format(str(self.plant.generation))
+        harvest_text += "If you harvest your plant you'll start over from a seed.\nContinue? (Y/n)"
         self.draw_info_text(harvest_text)
         try:
             user_in = self.screen.getch() # Gets user input
