@@ -443,6 +443,8 @@ class CursedMenu(object):
         if self.infotoggle != 1:
             # get plant description before printing
             output_string = self.get_plant_description(this_plant)
+            growth_multiplier = 1 + (0.2 * this_plant.generation)
+            output_string += "Generation: {}\nGrowth rate: {}".format(self.plant.generation, growth_multiplier)
             self.draw_info_text(output_string)
             self.infotoggle = 1
         else:
@@ -492,7 +494,7 @@ class CursedMenu(object):
         if not self.plant.dead:
             if self.plant.stage == max_stage:
                 harvest_text += "Congratulations! You raised your plant to its final stage of growth.\n"
-                harvest_text += "Generation: {}\n".format(str(self.plant.generation))
+                harvest_text += "Your next plant will grow at a speed of: {}x\n".format(1 + (0.2 * self.plant.generation))
         harvest_text += "If you harvest your plant you'll start over from a seed.\nContinue? (Y/n)"
         self.draw_info_text(harvest_text)
         try:

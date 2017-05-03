@@ -206,7 +206,6 @@ class Plant(object):
 
     def mutate_check(self):
         # Create plant mutation
-        # TODO: when out of debug this needs to be set to high number
         # Increase this # to make mutation rarer (chance 1 out of x each second)
         CONST_MUTATION_RARITY = 5000
         mutation_seed = random.randint(1,CONST_MUTATION_RARITY)
@@ -278,7 +277,9 @@ class Plant(object):
                 # Do something else
                 pass
             # TODO: event check
-            time.sleep(1)
+            generation_bonus = 0.2 * (self.generation - 1)
+            adjusted_sleep_time = 1 / (1 + generation_bonus)
+            time.sleep(adjusted_sleep_time)
 
 class DataManager(object):
     # handles user data, puts a .botany dir in user's home dir (OSX/Linux)
@@ -478,6 +479,7 @@ class DataManager(object):
                 "last_watered":this_plant.watered_timestamp,
                 "file_name":this_plant.file_name,
                 "stage": this_plant.stage_dict[this_plant.stage],
+                "generation": this_plant.generation,
         }
         if this_plant.stage >= 3:
             plant_info["rarity"] = this_plant.rarity_dict[this_plant.rarity]
