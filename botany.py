@@ -236,7 +236,9 @@ class Plant(object):
         if not self.dead:
             next_generation = self.generation + 1
         else:
-            next_generation = 1
+            # Should this reset to 1? Seems unfair.. for now generations will
+            # persist through death.
+            next_generation = self.generation
 
         self.write_lock = True
         self.kill_plant()

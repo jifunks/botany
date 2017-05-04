@@ -31,6 +31,8 @@ If your plant goes 5 days without water, it will die!
 * Curses-based menu system, optimized for 80x24 terminal
 * 20+ Species of plants w/ ASCII art for each
 * Persistent aging system that allows your plant to grow even when app is closed
+* Generations: each plant you bring to its full growth potential rewards you
+  with 20% growth speed for the next plant
 * Random and rare mutations can occur at any point in a plant's life
 * SQLite Community Garden of other users' plants (for shared unix servers)
 * Data files are created in the user's home (~) directory, along with a JSON file that can be used in other apps.
@@ -45,6 +47,7 @@ If your plant goes 5 days without water, it will die!
 "owner":"jakefunke",
 "is_dead":false,
 "last_watered":1489113197
+"generation": 2
 }
 ```
 
@@ -61,7 +64,7 @@ If your plant goes 5 days without water, it will die!
   * Server API to have rain storms, heat waves, insects
 * Name your plant
 * Reward for keeping plant alive
-  * Hybridization, multiple generations, lineage tracking
+  * Hybridization, lineage tracking
 
 ## requirements
 * Unix-based OS (Mac, Linux)
