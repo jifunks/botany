@@ -502,7 +502,7 @@ class CursedMenu(object):
         except Exception as e:
             self.__exit__()
 
-        if user_in == ord('Y'):
+        if user_in in [ord('Y'), ord('y')]:
             self.plant.start_over()
         else:
             pass
