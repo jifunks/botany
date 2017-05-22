@@ -146,7 +146,9 @@ class CursedMenu(object):
             20: 'palm',
         }
 
-        if this_plant.stage == 0:
+        if this_plant.dead == True:
+            self.ascii_render('rip.txt', ypos, xpos)
+        elif this_plant.stage == 0:
             self.ascii_render('seed.txt', ypos, xpos)
         elif this_plant.stage == 1:
             self.ascii_render('seedling.txt', ypos, xpos)
