@@ -207,7 +207,7 @@ class Plant(object):
     def mutate_check(self):
         # Create plant mutation
         # Increase this # to make mutation rarer (chance 1 out of x each second)
-        CONST_MUTATION_RARITY = 5000
+        CONST_MUTATION_RARITY = 10000
         mutation_seed = random.randint(1,CONST_MUTATION_RARITY)
         if mutation_seed == CONST_MUTATION_RARITY:
             # mutation gained!
