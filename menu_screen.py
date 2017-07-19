@@ -263,7 +263,7 @@ class CursedMenu(object):
             if this_garden[plant_id]:
                 if not this_garden[plant_id]["dead"]:
                     this_plant = this_garden[plant_id]
-                    entry = "{:14} - {:>16} - {:>7}p - {}\n".format(
+                    entry = "{:14} - {:>16} - {:>8}p - {}\n".format(
                         this_plant["owner"],
                         this_plant["age"],
                         this_plant["score"],
