@@ -16,7 +16,13 @@ class CursedMenu(object):
         curses.noecho()
         curses.raw()
         curses.start_color()
-        curses.curs_set(0)
+        try:
+            curses.curs_set(0)
+        except curses.error:
+            # Not all terminals support this functionality.
+            # When the error is ignored the screen will look a little uglier, but that's not terrible
+            # So in order to keep botany as accesible as possible to everyone, it should be safe to ignore the error.
+            pass
         self.screen.keypad(1)
         self.plant = this_plant
         self.user_data = this_data

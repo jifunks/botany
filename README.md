@@ -10,8 +10,6 @@ Check in and water your plant every 24h to keep it growing. 5 days without water
 
 *"We do not 'come into' this world; we come out of it, as leaves from a tree." - Alan Watts*
 
-*(work in progress)*
-
 ## getting started
 botany is designed for unix-based systems. Clone into a local directory using `$ git clone https://github.com/jifunks/botany.git`.
 
@@ -57,14 +55,11 @@ If your plant goes 5 days without water, it will die!
 ### to-dos
 * Finish garden feature
   * Water neighbor's plants
-* Harvest plant at end of life (gather seeds)
-  * Plant pollination - cross-breed with neighbor plants to unlock second-gen plants
+* Plant pollination - cross-breed with neighbor plants to unlock second-gen plants
   * Share seeds with other users
 * Global events
   * Server API to have rain storms, heat waves, insects
-* Name your plant
-* Reward for keeping plant alive
-  * Hybridization, lineage tracking
+* Hybridization, lineage tracking
 
 ## requirements
 * Unix-based OS (Mac, Linux)
