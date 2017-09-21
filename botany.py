@@ -21,112 +21,116 @@ from menu_screen import *
 
 class Plant(object):
     # This is your plant!
-    stage_dict = {
-        0: 'seed',
-        1: 'seedling',
-        2: 'young',
-        3: 'mature',
-        4: 'flowering',
-        5: 'seed-bearing',
-    }
+    stage_list = [
+        'seed',
+        'seedling',
+        'young',
+        'mature',
+        'flowering',
+        'seed-bearing',
+    ]
 
-    color_dict = {
-        0: 'red',
-        1: 'orange',
-        2: 'yellow',
-        3: 'green',
-        4: 'blue',
-        5: 'indigo',
-        6: 'violet',
-        7: 'white',
-        8: 'black',
-        9: 'gold',
-        10: 'rainbow',
-    }
+    color_list = [
+        'red',
+        'orange',
+        'yellow',
+        'green',
+        'blue',
+        'indigo',
+        'violet',
+        'white',
+        'black',
+        'gold',
+        'rainbow',
+    ]
 
-    rarity_dict = {
-        0: 'common',
-        1: 'uncommon',
-        2: 'rare',
-        3: 'legendary',
-        4: 'godly',
-    }
+    rarity_list = [
+        'common',
+        'uncommon',
+        'rare',
+        'legendary',
+        'godly',
+    ]
 
-    species_dict = {
-        0: 'poppy',
-        1: 'cactus',
-        2: 'aloe',
-        3: 'venus flytrap',
-        4: 'jade plant',
-        5: 'fern',
-        6: 'daffodil',
-        7: 'sunflower',
-        8: 'baobab',
-        9: 'lithops',
-        10: 'hemp',
-        11: 'pansy',
-        12: 'iris',
-        13: 'agave',
-        14: 'ficus',
-        15: 'moss',
-        16: 'sage',
-        17: 'snapdragon',
-        18: 'columbine',
-        19: 'brugmansia',
-        20: 'palm',
-    }
+    species_list = [
+        'poppy',
+        'cactus',
+        'aloe',
+        'venus flytrap',
+        'jade plant',
+        'fern',
+        'daffodil',
+        'sunflower',
+        'baobab',
+        'lithops',
+        'hemp',
+        'pansy',
+        'iris',
+        'agave',
+        'ficus',
+        'moss',
+        'sage',
+        'snapdragon',
+        'columbine',
+        'brugmansia',
+        'palm',
+    ]
 
-    mutation_dict = {
-        0: '',
-        1: 'humming',
-        2: 'noxious',
-        3: 'vorpal',
-        4: 'glowing',
-        5: 'electric',
-        6: 'icy',
-        7: 'flaming',
-        8: 'psychic',
-        9: 'screaming',
-        10: 'chaotic',
-        11: 'hissing',
-        12: 'gelatinous',
-        13: 'deformed',
-        14: 'shaggy',
-        15: 'scaly',
-        16: 'depressed',
-        17: 'anxious',
-        18: 'metallic',
-        19: 'glossy',
-        20: 'psychedelic',
-        21: 'bonsai',
-        22: 'foamy',
-        23: 'singing',
-        24: 'fractal',
-        25: 'crunchy',
-        26: 'goth',
-        27: 'oozing',
-        28: 'stinky',
-        29: 'aromatic',
-        30: 'juicy',
-        31: 'smug',
-        32: 'vibrating',
-        33: 'lithe',
-        34: 'chalky',
-        35: 'naive',
-        36: 'ersatz',
-        37: 'disco',
-        38: 'levitating',
-        39: 'colossal',
-    }
+    mutation_list = [
+        '',
+        'humming',
+        'noxious',
+        'vorpal',
+        'glowing',
+        'electric',
+        'icy',
+        'flaming',
+        'psychic',
+        'screaming',
+        'chaotic',
+        'hissing',
+        'gelatinous',
+        'deformed',
+        'shaggy',
+        'scaly',
+        'depressed',
+        'anxious',
+        'metallic',
+        'glossy',
+        'psychedelic',
+        'bonsai',
+        'foamy',
+        'singing',
+        'fractal',
+        'crunchy',
+        'goth',
+        'oozing',
+        'stinky',
+        'aromatic',
+        'juicy',
+        'smug',
+        'vibrating',
+        'lithe',
+        'chalky',
+        'naive',
+        'ersatz',
+        'disco',
+        'levitating',
+        'colossal',
+        'luminous',
+        'cosmic',
+        'ethereal',
+    ]
 
     def __init__(self, this_filename, generation=1):
         # Constructor
         self.plant_id = str(uuid.uuid4())
-        self.life_stages = (3600*24, (3600*24)*3, (3600*24)*10, (3600*24)*20, (3600*24)*30)
+        # self.life_stages = (3600*24, (3600*24)*3, (3600*24)*10, (3600*24)*20, (3600*24)*30)
+        self.life_stages = (5, 10, 15, 20, 25)
         self.stage = 0
         self.mutation = 0
-        self.species = random.randint(0,len(self.species_dict)-1)
-        self.color = random.randint(0,len(self.color_dict)-1)
+        self.species = random.randint(0,len(self.species_list)-1)
+        self.color = random.randint(0,len(self.color_list)-1)
         self.rarity = self.rarity_check()
         self.ticks = 0
         self.age_formatted = "0"
@@ -150,14 +154,14 @@ class Plant(object):
         # Converts plant data to human-readable format
         output = ""
         if self.stage >= 3:
-            output += self.rarity_dict[self.rarity] + " "
+            output += self.rarity_list[self.rarity] + " "
         if self.mutation != 0:
-            output += self.mutation_dict[self.mutation] + " "
+            output += self.mutation_list[self.mutation] + " "
         if self.stage >= 4:
-            output += self.color_dict[self.color] + " "
-        output += self.stage_dict[self.stage] + " "
+            output += self.color_list[self.color] + " "
+        output += self.stage_list[self.stage] + " "
         if self.stage >= 2:
-            output += self.species_dict[self.species] + " "
+            output += self.species_list[self.species] + " "
         return output.strip()
 
     def rarity_check(self):
@@ -211,7 +215,7 @@ class Plant(object):
         mutation_seed = random.randint(1,CONST_MUTATION_RARITY)
         if mutation_seed == CONST_MUTATION_RARITY:
             # mutation gained!
-            mutation = random.randint(0,len(self.mutation_dict)-1)
+            mutation = random.randint(0,len(self.mutation_list)-1)
             if self.mutation == 0:
                 self.mutation = mutation
                 return True
@@ -220,7 +224,7 @@ class Plant(object):
 
     def growth(self):
         # Increase plant growth stage
-        if self.stage < (len(self.stage_dict)-1):
+        if self.stage < (len(self.stage_list)-1):
             self.stage += 1
 
     def water(self):
@@ -267,7 +271,7 @@ class Plant(object):
             if not self.dead:
                 if self.watered_24h:
                     self.ticks += 1
-                    if self.stage < len(self.stage_dict)-1:
+                    if self.stage < len(self.stage_list)-1:
                         if self.ticks >= self.life_stages[self.stage]:
                             self.growth()
                     if self.mutate_check():
@@ -414,6 +418,8 @@ class DataManager(object):
 
     def update_garden_db(self, this_plant):
         # insert or update this plant id's entry in DB
+        # TODO: make sure other instances of user are deleted
+        #   Could create a clean db function
         self.init_database()
         age_formatted = self.plant_age_convert(this_plant)
         conn = sqlite3.connect(self.garden_db_path)
@@ -480,17 +486,17 @@ class DataManager(object):
                 "is_dead":this_plant.dead,
                 "last_watered":this_plant.watered_timestamp,
                 "file_name":this_plant.file_name,
-                "stage": this_plant.stage_dict[this_plant.stage],
+                "stage": this_plant.stage_list[this_plant.stage],
                 "generation": this_plant.generation,
         }
         if this_plant.stage >= 3:
-            plant_info["rarity"] = this_plant.rarity_dict[this_plant.rarity]
+            plant_info["rarity"] = this_plant.rarity_list[this_plant.rarity]
         if this_plant.mutation != 0:
-            plant_info["mutation"] = this_plant.mutation_dict[this_plant.mutation]
+            plant_info["mutation"] = this_plant.mutation_list[this_plant.mutation]
         if this_plant.stage >= 4:
-            plant_info["color"] = this_plant.color_dict[this_plant.color]
+            plant_info["color"] = this_plant.color_list[this_plant.color]
         if this_plant.stage >= 2:
-            plant_info["species"] = this_plant.species_dict[this_plant.species]
+            plant_info["species"] = this_plant.species_list[this_plant.species]
 
         with open(json_file, 'w') as outfile:
             json.dump(plant_info, outfile)

@@ -128,29 +128,29 @@ class CursedMenu(object):
     def draw_plant_ascii(self, this_plant):
         ypos = 1
         xpos = int((self.maxx-37)/2 + 25)
-        plant_art_dict = {
-            0: 'poppy',
-            1: 'cactus',
-            2: 'aloe',
-            3: 'flytrap',
-            4: 'jadeplant',
-            5: 'fern',
-            6: 'daffodil',
-            7: 'sunflower',
-            8: 'baobab',
-            9: 'lithops',
-            10: 'hemp',
-            11: 'pansy',
-            12: 'iris',
-            13: 'agave',
-            14: 'ficus',
-            15: 'moss',
-            16: 'sage',
-            17: 'snapdragon',
-            18: 'columbine',
-            19: 'brugmansia',
-            20: 'palm',
-        }
+        plant_art_list = [
+            'poppy',
+            'cactus',
+            'aloe',
+            'flytrap',
+            'jadeplant',
+            'fern',
+            'daffodil',
+            'sunflower',
+            'baobab',
+            'lithops',
+            'hemp',
+            'pansy',
+            'iris',
+            'agave',
+            'ficus',
+            'moss',
+            'sage',
+            'snapdragon',
+            'columbine',
+            'brugmansia',
+            'palm',
+        ]
 
         if this_plant.dead == True:
             self.ascii_render('rip.txt', ypos, xpos)
@@ -159,13 +159,13 @@ class CursedMenu(object):
         elif this_plant.stage == 1:
             self.ascii_render('seedling.txt', ypos, xpos)
         elif this_plant.stage == 2:
-            this_filename = plant_art_dict[this_plant.species]+'1.txt'
+            this_filename = plant_art_list[this_plant.species]+'1.txt'
             self.ascii_render(this_filename, ypos, xpos)
         elif this_plant.stage == 3 or this_plant.stage == 5:
-            this_filename = plant_art_dict[this_plant.species]+'2.txt'
+            this_filename = plant_art_list[this_plant.species]+'2.txt'
             self.ascii_render(this_filename, ypos, xpos)
         elif this_plant.stage == 4:
-            this_filename = plant_art_dict[this_plant.species]+'3.txt'
+            this_filename = plant_art_list[this_plant.species]+'3.txt'
             self.ascii_render(this_filename, ypos, xpos)
 
     def draw_default(self):
@@ -314,8 +314,8 @@ class CursedMenu(object):
 
     def get_plant_description(self, this_plant):
         output_text = ""
-        this_species = this_plant.species_dict[this_plant.species]
-        this_color = this_plant.color_dict[this_plant.color]
+        this_species = this_plant.species_list[this_plant.species]
+        this_color = this_plant.color_list[this_plant.color]
         this_stage = this_plant.stage
 
         stage_descriptions = {
@@ -421,9 +421,9 @@ class CursedMenu(object):
 
         # if seedling
         if this_stage == 1:
-            species_options = [this_plant.species_dict[this_plant.species],
-                    this_plant.species_dict[(this_plant.species+3) % len(this_plant.species_dict)],
-                    this_plant.species_dict[(this_plant.species-3) % len(this_plant.species_dict)]]
+            species_options = [this_plant.species_list[this_plant.species],
+                    this_plant.species_list[(this_plant.species+3) % len(this_plant.species_list)],
+                    this_plant.species_list[(this_plant.species-3) % len(this_plant.species_list)]]
             random.shuffle(species_options)
             plant_hint = "It could be a(n) " + species_options[0] + ", " + species_options[1] + ", or " + species_options[2]
             output_text += plant_hint + ".\n"
@@ -436,9 +436,9 @@ class CursedMenu(object):
 
         # if mature plant
         if this_stage == 3:
-            color_options = [this_plant.color_dict[this_plant.color],
-                    this_plant.color_dict[(this_plant.color+3) % len(this_plant.color_dict)],
-                    this_plant.color_dict[(this_plant.color-3) % len(this_plant.color_dict)]]
+            color_options = [this_plant.color_list[this_plant.color],
+                    this_plant.color_list[(this_plant.color+3) % len(this_plant.color_list)],
+                    this_plant.color_list[(this_plant.color-3) % len(this_plant.color_list)]]
             random.shuffle(color_options)
             plant_hint = "You can see the first hints of " + color_options[0] + ", " + color_options[1] + ", or " + color_options[2]
             output_text += plant_hint + ".\n"
@@ -497,7 +497,7 @@ class CursedMenu(object):
     def harvest_confirmation(self):
         self.clear_info_pane()
         # get plant description before printing
-        max_stage = len(self.plant.stage_dict) - 1
+        max_stage = len(self.plant.stage_list) - 1
         harvest_text = ""
         if not self.plant.dead:
             if self.plant.stage == max_stage:
