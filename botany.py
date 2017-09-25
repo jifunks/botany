@@ -125,8 +125,8 @@ class Plant(object):
     def __init__(self, this_filename, generation=1):
         # Constructor
         self.plant_id = str(uuid.uuid4())
-        # self.life_stages = (3600*24, (3600*24)*3, (3600*24)*10, (3600*24)*20, (3600*24)*30)
-        self.life_stages = (5, 10, 15, 20, 25)
+        self.life_stages = (3600*24, (3600*24)*3, (3600*24)*10, (3600*24)*20, (3600*24)*30)
+        # self.life_stages = (5, 10, 15, 20, 25)
         self.stage = 0
         self.mutation = 0
         self.species = random.randint(0,len(self.species_list)-1)
