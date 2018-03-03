@@ -125,8 +125,8 @@ class Plant(object):
     def __init__(self, this_filename, generation=1):
         # Constructor
         self.plant_id = str(uuid.uuid4())
-        self.life_stages = (3600*24, (3600*24)*3, (3600*24)*10, (3600*24)*20, (3600*24)*30)
-        # self.life_stages = (5, 10, 15, 20, 25)
+        # self.life_stages = (3600*24, (3600*24)*3, (3600*24)*10, (3600*24)*20, (3600*24)*30)
+        self.life_stages = (2, 4, 6, 8, 10)
         self.stage = 0
         self.mutation = 0
         self.species = random.randint(0,len(self.species_list)-1)
@@ -198,9 +198,29 @@ class Plant(object):
             self.dead = True
         return self.dead
 
+    def guest_check(self):
+        user_dir = os.path.expanduser("~")
+        botany_dir = os.path.join(user_dir,'.botany')
+        visitor_filepath = os.path.join(botany_dir,'visitors.json')
+        guest_data = {'latest_timestamp': 0, 'visitors': []}
+        visitors = []
+        if os.path.isfile(visitor_filepath):
+            with open(visitor_filepath, 'rw') as visitor_file:
+                data = json.load(visitor_file)
+                for element in data:
+                    if element['user'] not in guest_data['visitors']:
+                        guest_data['visitors'].append(element['user'])
+                    if element['timestamp'] > guest_data['latest_timestamp']:
+                        guest_data['latest_timestamp'] = element['timestamp']
+            os.remove(visitor_filepath)
+        return guest_data
+
     def water_check(self):
-        # if plant has been watered in 24h then it keeps growing
-        # time_delta_watered is difference from now to last watered
+        guest_data = self.guest_check()
+        if guest_data['visitors']:
+            if guest_data['latest_timestamp'] > self.watered_timestamp:
+                self.watered_timestamp = guest_data['latest_timestamp']
+
         self.time_delta_watered = int(time.time()) - self.watered_timestamp
         if self.time_delta_watered <= (24 * 3600):
             return True
@@ -298,6 +318,9 @@ class DataManager(object):
 
     savefile_name = this_user + '_plant.dat'
     savefile_path = os.path.join(botany_dir, savefile_name)
+    #set this.savefile_path to guest_garden path
+
+
     garden_db_path = os.path.join(game_dir, 'sqlite/garden_db.sqlite')
     garden_json_path = os.path.join(game_dir, 'garden_file.json')
     harvest_file_path = os.path.join(botany_dir, 'harvest_file.dat')

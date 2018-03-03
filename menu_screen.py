@@ -40,7 +40,7 @@ class CursedMenu(object):
         screen_thread.daemon = True
         screen_thread.start()
         self.screen.clear()
-        self.show(["water","look","garden","instructions"], title=' botany ', subtitle='options')
+        self.show(["water","look","garden","visit", "instructions"], title=' botany ', subtitle='options')
 
     def define_colors(self):
         # set curses color pairs manually
@@ -128,6 +128,7 @@ class CursedMenu(object):
     def draw_plant_ascii(self, this_plant):
         ypos = 1
         xpos = int((self.maxx-37)/2 + 25)
+        # TODO: pull this from botany class
         plant_art_list = [
             'poppy',
             'cactus',
@@ -184,12 +185,12 @@ class CursedMenu(object):
             self.screen.addstr(5+index ,4, clear_bar, curses.A_NORMAL)
             self.screen.addstr(5+index ,4, "%d - %s" % (index+1, self.options[index]), textstyle)
 
-        self.screen.addstr(11, 2, clear_bar, curses.A_NORMAL)
         self.screen.addstr(12, 2, clear_bar, curses.A_NORMAL)
-        self.screen.addstr(11, 2, "plant: ", curses.A_DIM)
-        self.screen.addstr(11, 9, self.plant_string, curses.A_NORMAL)
-        self.screen.addstr(12, 2, "score: ", curses.A_DIM)
-        self.screen.addstr(12, 9, self.plant_ticks, curses.A_NORMAL)
+        self.screen.addstr(13, 2, clear_bar, curses.A_NORMAL)
+        self.screen.addstr(12, 2, "plant: ", curses.A_DIM)
+        self.screen.addstr(12, 9, self.plant_string, curses.A_NORMAL)
+        self.screen.addstr(13, 2, "score: ", curses.A_DIM)
+        self.screen.addstr(13, 9, self.plant_ticks, curses.A_NORMAL)
 
         # display fancy water gauge
         if not self.plant.dead:
@@ -516,6 +517,33 @@ class CursedMenu(object):
             pass
         self.clear_info_pane()
 
+    def visit_handler(self):
+        self.clear_info_pane()
+        self.draw_info_text("whose plant would you like to visit?")
+        self.screen.addstr(15, 2, '~')
+        guest_garden = ""
+        user_input = 0
+        while user_input != 10:
+            user_input = self.screen.getch()
+            if user_input == 127:
+                if len(guest_garden) > 0:
+                    guest_garden = guest_garden[:-1]
+                    self.screen.addstr(15, 3, " " * (self.maxx-2) )
+            if user_input in range(256):
+                if chr(user_input).isalnum():
+                    guest_garden += chr(user_input)
+            self.screen.addstr(15, 3, str(guest_garden))
+            self.screen.refresh()
+        # test if user exists and has botany directory and file
+        guest_path = "/home/{}/.botany/{}_plant.dat".format(guest_garden, guest_garden)
+        if os.path.isfile(guest_path):
+            self.screen.addstr(16, 2, "...you watered ~" + str(guest_garden) + "'s plant...")
+        else:
+            self.screen.addstr(16, 2, "i can't seem to find directions to {}...".format(guest_garden))
+        self.screen.getch()
+        self.clear_info_pane()
+
+
     def handle_request(self, request):
         # Menu options call functions here
         if request == None: return
@@ -535,6 +563,15 @@ class CursedMenu(object):
             except Exception as exception:
                 self.screen.refresh()
                 # traceback.print_exc()
+        if request == "visit":
+            try:
+                self.visit_handler()
+            except Exception as exception:
+                print exception;
+                traceback.print_exc()
+
+                # self.screen.refresh()
+
         if request == "garden":
             try:
                 self.draw_garden()
