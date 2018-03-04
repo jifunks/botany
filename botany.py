@@ -74,6 +74,7 @@ class Plant(object):
         'columbine',
         'brugmansia',
         'palm',
+        'pachypodium',
     ]
 
     mutation_list = [
