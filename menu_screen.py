@@ -151,6 +151,7 @@ class CursedMenu(object):
             'columbine',
             'brugmansia',
             'palm',
+            'pachypodium',
         ]
 
         if this_plant.dead == True:
