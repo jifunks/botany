@@ -484,7 +484,7 @@ class CursedMenu(object):
     def clear_info_pane(self):
         # Clears bottom part of screen
         clear_bar = " " * (self.maxx - 3)
-        this_y = 12
+        this_y = 14
         while this_y < self.maxy:
              self.screen.addstr(this_y, 2, clear_bar, curses.A_NORMAL)
              this_y += 1
@@ -525,28 +525,32 @@ class CursedMenu(object):
     def build_visitor_output(self, visitors):
         visitor_block = ""
         visitor_line = ""
-        for visitor in visitors[:-1]:
-            if visitor_block.count('\n') > self.maxy-12:
-                visitor_block += "and more"
-                break
-            if len(visitor_line + visitor) > self.maxx-4:
-                visitor_block += '\n'
-                visitor_line = ""
-            visitor_block += str(visitor) + ', '
-            visitor_line += str(visitor) + ', '
+        if len(visitors) == 1:
+            visitor_block += str(visitors[0])
         else:
-            visitor_block += "& " + str(visitors[-1])
-            visitor_line += "& " + str(visitors[-1])
-
-
+            for visitor in visitors[:-1]:
+                if visitor_block.count('\n') > self.maxy-12:
+                    visitor_block += "and more"
+                    break
+                if len(visitor_line + visitor) > self.maxx-4:
+                    visitor_block += '\n'
+                    visitor_line = ""
+                visitor_block += str(visitor) + ', '
+                visitor_line += str(visitor) + ', '
+            else:
+                visitor_block += "& " + str(visitors[-1])
+                visitor_line += "& " + str(visitors[-1])
         return visitor_block
+
     def visit_handler(self):
+        self.clear_info_pane()
         self.draw_info_text("whose plant would you like to visit?")
         self.screen.addstr(15, 2, '~')
         if self.plant.visitors:
             self.draw_info_text("you've been visited by: ", 4)
             visitor_text = self.build_visitor_output(self.plant.visitors)
             self.draw_info_text(visitor_text, 5)
+            self.plant.visitors = []
 
         guest_garden = ""
         user_input = 0
@@ -573,16 +577,12 @@ class CursedMenu(object):
         if os.path.isfile(guest_visitor_file):
             self.water_on_visit(guest_visitor_file)
             self.screen.addstr(16, 2, "...you watered ~{}'s {}...".format(str(guest_garden), guest_plant_description))
-            # you watered their x plant
         else:
             self.screen.addstr(16, 2, "i can't seem to find directions to {}...".format(guest_garden))
         self.screen.getch()
         self.clear_info_pane()
 
     def water_on_visit(self, guest_visitor_file):
-        # check if path exists
-        # if not exists create and dump json in
-        # if exists open and append to file
         visitor_data = {}
         guest_data = {'user': getpass.getuser(), 'timestamp': int(time.time())}
         if os.path.isfile(guest_visitor_file):

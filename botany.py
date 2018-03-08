@@ -156,7 +156,6 @@ class Plant(object):
         # Migrates old data files to new
         if not hasattr(self, 'generation'):
             self.generation = 1
-
         if not hasattr(self, 'visitors'):
             self.visitors = []
         if not hasattr(self, 'weekly_visitors'):
@@ -216,7 +215,7 @@ class Plant(object):
         visitor_filepath = os.path.join(botany_dir,'visitors.json')
         guest_data = {'latest_timestamp': 0, 'visitors': []}
         if os.path.isfile(visitor_filepath):
-            with open(visitor_filepath, 'rw') as visitor_file:
+            with open(visitor_filepath, 'r') as visitor_file:
                 data = json.load(visitor_file)
                 for element in data:
                     if element['user'] not in self.visitors:
@@ -228,10 +227,8 @@ class Plant(object):
                         self.weekly_visitors[element['user']] += 1
                     if element['timestamp'] > guest_data['latest_timestamp']:
                         guest_data['latest_timestamp'] = element['timestamp']
-                    # TODO: reenable emptying of visitor file
-                    # TODO: create
-                # visitor_file.truncate()
-                # json.dump([], visitor_file)
+            with open(visitor_filepath, 'w') as visitor_file2:
+                visitor_file2.write('[]')
         else:
             with open(visitor_filepath, mode='w') as f:
                 json.dump([], f)
