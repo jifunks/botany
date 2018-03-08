@@ -145,11 +145,22 @@ class Plant(object):
         # must water plant first day
         self.watered_timestamp = int(time.time())-(24*3600)-1
         self.watered_24h = False
+        # visitors are coming
+        self.visitors = []
+        # TODO: manually checking for pending visitors
+        # TODO: clear visitors when checking
+        self.weekly_visitors = {}
+        # TODO: clear weekly visitors on sunday 00:00:00
 
     def migrate_properties(self):
         # Migrates old data files to new
         if not hasattr(self, 'generation'):
             self.generation = 1
+
+        if not hasattr(self, 'visitors'):
+            self.visitors = []
+        if not hasattr(self, 'weekly_visitors'):
+            self.weekly_visitors = {}
 
     def parse_plant(self):
         # Converts plant data to human-readable format
@@ -204,24 +215,32 @@ class Plant(object):
         botany_dir = os.path.join(user_dir,'.botany')
         visitor_filepath = os.path.join(botany_dir,'visitors.json')
         guest_data = {'latest_timestamp': 0, 'visitors': []}
-        visitors = []
         if os.path.isfile(visitor_filepath):
             with open(visitor_filepath, 'rw') as visitor_file:
                 data = json.load(visitor_file)
                 for element in data:
-                    if element['user'] not in guest_data['visitors']:
-                        guest_data['visitors'].append(element['user'])
+                    if element['user'] not in self.visitors:
+                        self.visitors.append(element['user'])
+                    # counter for weekly visitors
+                    if element['user'] not in self.weekly_visitors:
+                        self.weekly_visitors[element['user']] = 1
+                    else:
+                        self.weekly_visitors[element['user']] += 1
                     if element['timestamp'] > guest_data['latest_timestamp']:
                         guest_data['latest_timestamp'] = element['timestamp']
-            os.remove(visitor_filepath)
-        return guest_data
+                    # TODO: reenable emptying of visitor file
+                    # TODO: create
+                # visitor_file.truncate()
+                # json.dump([], visitor_file)
+        else:
+            with open(visitor_filepath, mode='w') as f:
+                json.dump([], f)
+        return guest_data['latest_timestamp']
 
     def water_check(self):
-        guest_data = self.guest_check()
-        if guest_data['visitors']:
-            if guest_data['latest_timestamp'] > self.watered_timestamp:
-                self.watered_timestamp = guest_data['latest_timestamp']
-
+        latest_visitor_timestamp = self.guest_check()
+        if latest_visitor_timestamp > self.watered_timestamp:
+            self.watered_timestamp = latest_visitor_timestamp
         self.time_delta_watered = int(time.time()) - self.watered_timestamp
         if self.time_delta_watered <= (24 * 3600):
             return True

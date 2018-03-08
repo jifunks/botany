@@ -5,6 +5,8 @@ import traceback
 import threading
 import time
 import random
+import getpass
+import json
 
 class CursedMenu(object):
     #TODO: name your plant
@@ -481,19 +483,21 @@ class CursedMenu(object):
 
     def clear_info_pane(self):
         # Clears bottom part of screen
-        clear_bar = " " * (self.maxx-2) + "\n"
-        clear_block = clear_bar * (self.maxy - 15)
-        for y, line in enumerate(clear_block.splitlines(), 2):
-            self.screen.addstr(y+12, 2, line, curses.A_NORMAL)
+        clear_bar = " " * (self.maxx - 3)
+        this_y = 12
+        while this_y < self.maxy:
+             self.screen.addstr(this_y, 2, clear_bar, curses.A_NORMAL)
+             this_y += 1
         self.screen.refresh()
 
-    def draw_info_text(self, info_text):
+    def draw_info_text(self, info_text, y_offset = 0):
         # print lines of text to info pane at bottom of screen
         if type(info_text) is str:
             info_text = info_text.splitlines()
-
         for y, line in enumerate(info_text, 2):
-            self.screen.addstr(y+12, 2, line, curses.A_NORMAL)
+            this_y = y+12 + y_offset
+            if this_y < self.maxy:
+                self.screen.addstr(this_y, 2, line, curses.A_NORMAL)
         self.screen.refresh()
 
     def harvest_confirmation(self):
@@ -518,10 +522,32 @@ class CursedMenu(object):
             pass
         self.clear_info_pane()
 
+    def build_visitor_output(self, visitors):
+        visitor_block = ""
+        visitor_line = ""
+        for visitor in visitors[:-1]:
+            if visitor_block.count('\n') > self.maxy-12:
+                visitor_block += "and more"
+                break
+            if len(visitor_line + visitor) > self.maxx-4:
+                visitor_block += '\n'
+                visitor_line = ""
+            visitor_block += str(visitor) + ', '
+            visitor_line += str(visitor) + ', '
+        else:
+            visitor_block += "& " + str(visitors[-1])
+            visitor_line += "& " + str(visitors[-1])
+
+
+        return visitor_block
     def visit_handler(self):
-        self.clear_info_pane()
         self.draw_info_text("whose plant would you like to visit?")
         self.screen.addstr(15, 2, '~')
+        if self.plant.visitors:
+            self.draw_info_text("you've been visited by: ", 4)
+            visitor_text = self.build_visitor_output(self.plant.visitors)
+            self.draw_info_text(visitor_text, 5)
+
         guest_garden = ""
         user_input = 0
         while user_input != 10:
@@ -536,14 +562,35 @@ class CursedMenu(object):
             self.screen.addstr(15, 3, str(guest_garden))
             self.screen.refresh()
         # test if user exists and has botany directory and file
-        guest_path = "/home/{}/.botany/{}_plant.dat".format(guest_garden, guest_garden)
-        if os.path.isfile(guest_path):
-            self.screen.addstr(16, 2, "...you watered ~" + str(guest_garden) + "'s plant...")
+        home_folder = os.path.dirname(os.path.expanduser("~"))
+        guest_json = home_folder + "/{}/.botany/{}_plant_data.json".format(guest_garden, guest_garden)
+        guest_plant_description = ""
+        if os.path.isfile(guest_json):
+            with open(guest_json) as f:
+                visitor_data = json.load(f)
+                guest_plant_description = visitor_data['description']
+        guest_visitor_file = home_folder + "/{}/.botany/visitors.json".format(guest_garden, guest_garden)
+        if os.path.isfile(guest_visitor_file):
+            self.water_on_visit(guest_visitor_file)
+            self.screen.addstr(16, 2, "...you watered ~{}'s {}...".format(str(guest_garden), guest_plant_description))
+            # you watered their x plant
         else:
             self.screen.addstr(16, 2, "i can't seem to find directions to {}...".format(guest_garden))
         self.screen.getch()
         self.clear_info_pane()
 
+    def water_on_visit(self, guest_visitor_file):
+        # check if path exists
+        # if not exists create and dump json in
+        # if exists open and append to file
+        visitor_data = {}
+        guest_data = {'user': getpass.getuser(), 'timestamp': int(time.time())}
+        if os.path.isfile(guest_visitor_file):
+            with open(guest_visitor_file) as f:
+                visitor_data = json.load(f)
+            visitor_data.append(guest_data)
+            with open(guest_visitor_file, mode='w') as f:
+                f.write(json.dumps(visitor_data, indent=2))
 
     def handle_request(self, request):
         # Menu options call functions here
