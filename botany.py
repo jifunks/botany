@@ -225,22 +225,24 @@ class Plant(object):
         if os.path.isfile(visitor_filepath):
             with open(visitor_filepath, 'r') as visitor_file:
                 data = json.load(visitor_file)
-                for element in data:
-                    if element['user'] not in self.visitors:
-                        self.visitors.append(element['user'])
-                    if element['user'] not in visitors_this_check:
-                        visitors_this_check.append(element['user'])
-                    if element['timestamp'] > latest_timestamp:
-                        latest_timestamp = element['timestamp']
-            with open(visitor_filepath, 'w') as visitor_file:
-                visitor_file.write('[]')
-            try:
-                self.update_visitor_db(visitors_this_check)
-            except:
-                pass
+                if data:
+                    for element in data:
+                        if element['user'] not in self.visitors:
+                            self.visitors.append(element['user'])
+                        if element['user'] not in visitors_this_check:
+                            visitors_this_check.append(element['user'])
+                        if element['timestamp'] > latest_timestamp:
+                            latest_timestamp = element['timestamp']
+                    try:
+                       self.update_visitor_db(visitors_this_check)
+                    except:
+                        pass
+                    with open(visitor_filepath, 'w') as visitor_file:
+                        visitor_file.write('[]')
         else:
             with open(visitor_filepath, mode='w') as f:
                 json.dump([], f)
+            os.chmod(visitor_filepath, 0666)
         return latest_timestamp
 
     def water_check(self):
