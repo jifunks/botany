@@ -251,6 +251,7 @@ class Plant(object):
             self.watered_timestamp = latest_visitor_timestamp
         self.time_delta_watered = int(time.time()) - self.watered_timestamp
         if self.time_delta_watered <= (24 * 3600):
+            self.watered_24h = True
             return True
         else:
             self.watered_24h = False
