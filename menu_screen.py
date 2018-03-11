@@ -525,7 +525,6 @@ class CursedMenu(object):
         conn = sqlite3.connect(garden_db_path)
         c = conn.cursor()
         c.execute("SELECT * FROM visitors WHERE garden_name = '{}' ORDER BY weekly_visits".format(self.plant.owner))
-        # if c.rowcount:
         visitor_data = c.fetchall()
         conn.close()
         visitor_block = ""
@@ -545,6 +544,7 @@ class CursedMenu(object):
         return visitor_block
 
     def get_user_string(self, xpos=3, ypos=15):
+        # doesn't allow non-alphanumeric text
         user_string = ""
         user_input = 0
         while user_input != 10:
@@ -572,7 +572,6 @@ class CursedMenu(object):
         weekly_visitor_text = self.get_weekly_visitors()
         self.draw_info_text("this week you've been visited by: ", 6)
         self.draw_info_text(weekly_visitor_text, 7)
-        # user input section (can't get getstr to work)
         guest_garden = self.get_user_string()
         if not guest_garden:
             self.clear_info_pane()
@@ -626,11 +625,8 @@ class CursedMenu(object):
             try:
                 self.visit_handler()
             except Exception as exception:
-                print exception;
-                traceback.print_exc()
-
-                # self.screen.refresh()
-
+                self.screen.refresh()
+                # traceback.print_exc()
         if request == "garden":
             try:
                 self.draw_garden()

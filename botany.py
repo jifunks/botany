@@ -124,7 +124,7 @@ class Plant(object):
         # Constructor
         self.plant_id = str(uuid.uuid4())
         self.life_stages = (3600*24, (3600*24)*3, (3600*24)*10, (3600*24)*20, (3600*24)*30)
-        # self.life_stages = (2, 4, 6, 8, 10)
+        # self.life_stages = (2, 4, 6, 8, 10) # debug mode
         self.stage = 0
         self.mutation = 0
         self.species = random.randint(0,len(self.species_list)-1)
@@ -142,7 +142,6 @@ class Plant(object):
         # must water plant first day
         self.watered_timestamp = int(time.time())-(24*3600)-1
         self.watered_24h = False
-        # visitors are coming
         self.visitors = []
 
     def migrate_properties(self):
@@ -290,7 +289,6 @@ class Plant(object):
             # Should this reset to 1? Seems unfair.. for now generations will
             # persist through death.
             next_generation = self.generation
-
         self.write_lock = True
         self.kill_plant()
         while self.write_lock:
@@ -347,7 +345,6 @@ class DataManager(object):
     savefile_path = os.path.join(botany_dir, savefile_name)
     #set this.savefile_path to guest_garden path
 
-
     garden_db_path = os.path.join(game_dir, 'sqlite/garden_db.sqlite')
     garden_json_path = os.path.join(game_dir, 'garden_file.json')
     harvest_file_path = os.path.join(botany_dir, 'harvest_file.dat')
@@ -376,7 +373,6 @@ class DataManager(object):
         death_check_thread = threading.Thread(target=self.death_check_update, args=(this_plant,))
         death_check_thread.daemon = True
         death_check_thread.start()
-
         autosave_thread = threading.Thread(target=self.autosave, args=(this_plant,))
         autosave_thread.daemon = True
         autosave_thread.start()
@@ -566,8 +562,7 @@ class DataManager(object):
             json.dump(plant_info, outfile)
 
     def harvest_plant(self, this_plant):
-        # TODO: could just use a sqlite query to retrieve all of user's dead
-        # plants
+        # TODO: plant history feature -  could just use a sqlite query to retrieve all of user's dead plants
 
         # harvest is a dict of dicts
         # harvest contains one entry for each plant id
