@@ -22,13 +22,14 @@ Water your seed to get started. You can come and go as you please and your plant
 
 Make sure to come back and water every 24 hours or your plant won't grow.
 
-If your plant goes 5 days without water, it will die!
+If your plant goes 5 days without water, it will die! Recruit your friends to water your plant for you!
 
 
 ## features
 * Curses-based menu system, optimized for 80x24 terminal
 * 20+ Species of plants w/ ASCII art for each
 * Persistent aging system that allows your plant to grow even when app is closed
+* Multiplayer! Water your friends plants & see who's visited your garden.
 * Generations: each plant you bring to its full growth potential rewards you
   with 20% growth speed for the next plant
 * Random and rare mutations can occur at any point in a plant's life
@@ -50,8 +51,6 @@ If your plant goes 5 days without water, it will die!
 ```
 
 ### to-dos
-* Finish garden feature
-  * Water neighbor's plants
 * Plant pollination - cross-breed with neighbor plants to unlock second-gen plants
   * Share seeds with other users
 * Global events

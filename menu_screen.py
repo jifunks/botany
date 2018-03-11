@@ -132,7 +132,30 @@ class CursedMenu(object):
     def draw_plant_ascii(self, this_plant):
         ypos = 0
         xpos = int((self.maxx-37)/2 + 25)
-        plant_art_list =  this_plant.species_list
+        plant_art_list = [
+            'poppy',
+            'cactus',
+            'aloe',
+            'flytrap',
+            'jadeplant',
+            'fern',
+            'daffodil',
+            'sunflower',
+            'baobab',
+            'lithops',
+            'hemp',
+            'pansy',
+            'iris',
+            'agave',
+            'ficus',
+            'moss',
+            'sage',
+            'snapdragon',
+            'columbine',
+            'brugmansia',
+            'palm',
+            'pachypodium',
+        ]
         if this_plant.dead == True:
             self.ascii_render('rip.txt', ypos, xpos)
         elif this_plant.stage == 0:
