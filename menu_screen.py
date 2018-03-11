@@ -7,6 +7,7 @@ import time
 import random
 import getpass
 import json
+import sqlite3
 
 class CursedMenu(object):
     #TODO: name your plant
@@ -86,6 +87,7 @@ class CursedMenu(object):
 
     def draw(self):
         # Draw the menu and lines
+        self.maxy, self.maxx = self.screen.getmaxyx()
         self.screen.refresh()
         try:
             self.draw_default()
@@ -130,32 +132,7 @@ class CursedMenu(object):
     def draw_plant_ascii(self, this_plant):
         ypos = 1
         xpos = int((self.maxx-37)/2 + 25)
-        # TODO: pull this from botany class
-        plant_art_list = [
-            'poppy',
-            'cactus',
-            'aloe',
-            'flytrap',
-            'jadeplant',
-            'fern',
-            'daffodil',
-            'sunflower',
-            'baobab',
-            'lithops',
-            'hemp',
-            'pansy',
-            'iris',
-            'agave',
-            'ficus',
-            'moss',
-            'sage',
-            'snapdragon',
-            'columbine',
-            'brugmansia',
-            'palm',
-            'pachypodium',
-        ]
-
+        plant_art_list =  this_plant.species_list
         if this_plant.dead == True:
             self.ascii_render('rip.txt', ypos, xpos)
         elif this_plant.stage == 0:
@@ -175,18 +152,18 @@ class CursedMenu(object):
     def draw_default(self):
         # draws default menu
         clear_bar = " " * (int(self.maxx*2/3))
-        self.screen.addstr(2, 2, self.title, curses.A_STANDOUT) # Title for this menu
-        self.screen.addstr(4, 2, self.subtitle, curses.A_BOLD) #Subtitle for this menu
+        self.screen.addstr(1, 2, self.title, curses.A_STANDOUT) # Title for this menu
+        self.screen.addstr(3, 2, self.subtitle, curses.A_BOLD) #Subtitle for this menu
         # clear menu on screen
         for index in range(len(self.options)+1):
-            self.screen.addstr(5+index, 4, clear_bar, curses.A_NORMAL)
+            self.screen.addstr(4+index, 4, clear_bar, curses.A_NORMAL)
         # display all the menu items, showing the 'pos' item highlighted
         for index in range(len(self.options)):
             textstyle = self.normal
             if index == self.selected:
                 textstyle = self.highlighted
-            self.screen.addstr(5+index ,4, clear_bar, curses.A_NORMAL)
-            self.screen.addstr(5+index ,4, "%d - %s" % (index+1, self.options[index]), textstyle)
+            self.screen.addstr(4+index ,4, clear_bar, curses.A_NORMAL)
+            self.screen.addstr(4+index ,4, "%d - %s" % (index+1, self.options[index]), textstyle)
 
         self.screen.addstr(12, 2, clear_bar, curses.A_NORMAL)
         self.screen.addstr(13, 2, clear_bar, curses.A_NORMAL)
@@ -214,7 +191,6 @@ class CursedMenu(object):
         water_left = int(math.ceil(water_left_pct * 10))
         water_string = "(" + (")" * water_left) + ("." * (10 - water_left)) + ") " + str(int(water_left_pct * 100)) + "% "
         return water_string
-
 
     def update_plant_live(self):
         # updates plant data on menu screen, live!
@@ -522,50 +498,85 @@ class CursedMenu(object):
             pass
         self.clear_info_pane()
 
-    def build_visitor_output(self, visitors):
+    def build_weekly_visitor_output(self, visitors):
         visitor_block = ""
         visitor_line = ""
-        if len(visitors) == 1:
-            visitor_block += str(visitors[0])
-        else:
-            for visitor in visitors[:-1]:
-                if visitor_block.count('\n') > self.maxy-12:
-                    visitor_block += "and more"
-                    break
-                if len(visitor_line + visitor) > self.maxx-4:
+        for visitor in visitors:
+            this_visitor_string = str(visitor) + "({}) ".format(visitors[str(visitor)])
+            if len(visitor_line + this_visitor_string) > self.maxx-3:
+                visitor_block += '\n'
+                visitor_line = ""
+            visitor_block += this_visitor_string
+            visitor_line += this_visitor_string
+        return visitor_block
+
+    def build_latest_visitor_output(self, visitors):
+        visitor_line = ""
+        for visitor in visitors:
+            if len(visitor_line + visitor) > self.maxx-10:
+                visitor_line += "and more"
+                break
+            visitor_line += visitor + ' '
+        return [visitor_line]
+
+    def get_weekly_visitors(self):
+        game_dir = os.path.dirname(os.path.realpath(__file__))
+        garden_db_path = os.path.join(game_dir, 'sqlite/garden_db.sqlite')
+        conn = sqlite3.connect(garden_db_path)
+        c = conn.cursor()
+        c.execute("SELECT * FROM visitors WHERE garden_name = '{}' ORDER BY weekly_visits".format(self.plant.owner))
+        # if c.rowcount:
+        visitor_data = c.fetchall()
+        conn.close()
+        visitor_block = ""
+        visitor_line = ""
+        if visitor_data:
+            for visitor in visitor_data:
+                visitor_name = visitor[2]
+                weekly_visits = visitor[3]
+                this_visitor_string = "{}({}) ".format(visitor_name, weekly_visits)
+                if len(visitor_line + this_visitor_string) > self.maxx-3:
                     visitor_block += '\n'
                     visitor_line = ""
-                visitor_block += str(visitor) + ', '
-                visitor_line += str(visitor) + ', '
-            else:
-                visitor_block += "& " + str(visitors[-1])
-                visitor_line += "& " + str(visitors[-1])
+                visitor_block += this_visitor_string
+                visitor_line += this_visitor_string
+        else:
+            visitor_block = 'nobody :('
         return visitor_block
+
+    def get_user_string(self, xpos=3, ypos=15):
+        user_string = ""
+        user_input = 0
+        while user_input != 10:
+            user_input = self.screen.getch()
+            if user_input == 127:
+                if len(user_string) > 0:
+                    user_string = user_string[:-1]
+                    self.screen.addstr(15, 3, " " * (self.maxx-2) )
+            if user_input in range(256):
+                if chr(user_input).isalnum():
+                    user_string += chr(user_input)
+            self.screen.addstr(ypos, xpos, str(user_string))
+            self.screen.refresh()
+        return user_string
 
     def visit_handler(self):
         self.clear_info_pane()
         self.draw_info_text("whose plant would you like to visit?")
         self.screen.addstr(15, 2, '~')
         if self.plant.visitors:
-            self.draw_info_text("you've been visited by: ", 4)
-            visitor_text = self.build_visitor_output(self.plant.visitors)
-            self.draw_info_text(visitor_text, 5)
+            latest_visitor_string = self.build_latest_visitor_output(self.plant.visitors)
+            self.draw_info_text("since last time, you were visited by: ", 3)
+            self.draw_info_text(latest_visitor_string, 4)
             self.plant.visitors = []
-
-        guest_garden = ""
-        user_input = 0
-        while user_input != 10:
-            user_input = self.screen.getch()
-            if user_input == 127:
-                if len(guest_garden) > 0:
-                    guest_garden = guest_garden[:-1]
-                    self.screen.addstr(15, 3, " " * (self.maxx-2) )
-            if user_input in range(256):
-                if chr(user_input).isalnum():
-                    guest_garden += chr(user_input)
-            self.screen.addstr(15, 3, str(guest_garden))
-            self.screen.refresh()
-        # test if user exists and has botany directory and file
+        weekly_visitor_text = self.get_weekly_visitors()
+        self.draw_info_text("this week you've been visited by: ", 6)
+        self.draw_info_text(weekly_visitor_text, 7)
+        # user input section (can't get getstr to work)
+        guest_garden = self.get_user_string()
+        if not guest_garden:
+            self.clear_info_pane()
+            return None
         home_folder = os.path.dirname(os.path.expanduser("~"))
         guest_json = home_folder + "/{}/.botany/{}_plant_data.json".format(guest_garden, guest_garden)
         guest_plant_description = ""

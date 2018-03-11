@@ -15,9 +15,6 @@ from menu_screen import *
 
 # TODO:
 # - Switch from personal data file to table in DB
-# - Table in DB would allow others to modify (personal files might be
-# permission locked)
-# - this is a good idea.
 
 class Plant(object):
     # This is your plant!
@@ -147,10 +144,6 @@ class Plant(object):
         self.watered_24h = False
         # visitors are coming
         self.visitors = []
-        # TODO: manually checking for pending visitors
-        # TODO: clear visitors when checking
-        self.weekly_visitors = {}
-        # TODO: clear weekly visitors on sunday 00:00:00
 
     def migrate_properties(self):
         # Migrates old data files to new
@@ -158,8 +151,6 @@ class Plant(object):
             self.generation = 1
         if not hasattr(self, 'visitors'):
             self.visitors = []
-        if not hasattr(self, 'weekly_visitors'):
-            self.weekly_visitors = {}
 
     def parse_plant(self):
         # Converts plant data to human-readable format
@@ -209,30 +200,49 @@ class Plant(object):
             self.dead = True
         return self.dead
 
+    def update_visitor_db(self, visitor_names):
+        game_dir = os.path.dirname(os.path.realpath(__file__))
+        garden_db_path = os.path.join(game_dir, 'sqlite/garden_db.sqlite')
+        conn = sqlite3.connect(garden_db_path)
+        for name in (visitor_names):
+            c = conn.cursor()
+            c.execute("SELECT * FROM visitors WHERE garden_name = '{}' AND visitor_name = '{}' ".format(self.owner, name))
+            data=c.fetchone()
+            if data is None:
+                sql = """ INSERT INTO visitors (garden_name,visitor_name,weekly_visits) VALUES('{}', '{}',1)""".format(self.owner, name)
+                c.execute(sql)
+            else:
+                sql = """ UPDATE visitors SET weekly_visits = weekly_visits + 1 WHERE garden_name = '{}' AND visitor_name = '{}'""".format(self.owner, name)
+                c.execute(sql)
+        conn.commit()
+        conn.close()
+
     def guest_check(self):
         user_dir = os.path.expanduser("~")
         botany_dir = os.path.join(user_dir,'.botany')
         visitor_filepath = os.path.join(botany_dir,'visitors.json')
-        guest_data = {'latest_timestamp': 0, 'visitors': []}
+        latest_timestamp = 0
+        visitors_this_check = []
         if os.path.isfile(visitor_filepath):
             with open(visitor_filepath, 'r') as visitor_file:
                 data = json.load(visitor_file)
                 for element in data:
                     if element['user'] not in self.visitors:
                         self.visitors.append(element['user'])
-                    # counter for weekly visitors
-                    if element['user'] not in self.weekly_visitors:
-                        self.weekly_visitors[element['user']] = 1
-                    else:
-                        self.weekly_visitors[element['user']] += 1
-                    if element['timestamp'] > guest_data['latest_timestamp']:
-                        guest_data['latest_timestamp'] = element['timestamp']
-            with open(visitor_filepath, 'w') as visitor_file2:
-                visitor_file2.write('[]')
+                    if element['user'] not in visitors_this_check:
+                        visitors_this_check.append(element['user'])
+                    if element['timestamp'] > latest_timestamp:
+                        latest_timestamp = element['timestamp']
+            with open(visitor_filepath, 'w') as visitor_file:
+                visitor_file.write('[]')
+            try:
+                self.update_visitor_db(visitors_this_check)
+            except:
+                pass
         else:
             with open(visitor_filepath, mode='w') as f:
                 json.dump([], f)
-        return guest_data['latest_timestamp']
+        return latest_timestamp
 
     def water_check(self):
         latest_visitor_timestamp = self.guest_check()
@@ -456,11 +466,25 @@ class DataManager(object):
             open(self.garden_json_path, 'a').close()
             os.chmod(self.garden_json_path, 0666)
 
+    def migrate_database(self):
+        conn = sqlite3.connect(self.garden_db_path)
+        migrate_table_string = """CREATE TABLE IF NOT EXISTS visitors (
+        id integer PRIMARY KEY,
+        garden_name text,
+        visitor_name text,
+        weekly_visits integer
+        )"""
+        c = conn.cursor()
+        c.execute(migrate_table_string)
+        conn.close()
+        return True
+
     def update_garden_db(self, this_plant):
         # insert or update this plant id's entry in DB
         # TODO: make sure other instances of user are deleted
         #   Could create a clean db function
         self.init_database()
+        self.migrate_database()
         age_formatted = self.plant_age_convert(this_plant)
         conn = sqlite3.connect(self.garden_db_path)
         c = conn.cursor()
