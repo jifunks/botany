@@ -549,7 +549,8 @@ class CursedMenu(object):
         user_input = 0
         while user_input != 10:
             user_input = self.screen.getch()
-            if user_input == 127:
+            # osx and unix backspace chars...
+            if user_input == 127 or user_input == 263:
                 if len(user_string) > 0:
                     user_string = user_string[:-1]
                     self.screen.addstr(15, 3, " " * (self.maxx-2) )
