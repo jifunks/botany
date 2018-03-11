@@ -130,7 +130,7 @@ class CursedMenu(object):
         # self.screen.refresh()
 
     def draw_plant_ascii(self, this_plant):
-        ypos = 1
+        ypos = 0
         xpos = int((self.maxx-37)/2 + 25)
         plant_art_list =  this_plant.species_list
         if this_plant.dead == True:
