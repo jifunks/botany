@@ -600,6 +600,11 @@ class CursedMenu(object):
         if not guest_garden:
             self.clear_info_pane()
             return None
+        if guest_garden.lower() == getpass.getuser().lower():
+            self.screen.addstr(16, 2, "you're already here!")
+            self.screen.getch()
+            self.clear_info_pane()
+            return None
         home_folder = os.path.dirname(os.path.expanduser("~"))
         guest_json = home_folder + "/{}/.botany/{}_plant_data.json".format(guest_garden, guest_garden)
         guest_plant_description = ""

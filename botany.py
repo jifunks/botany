@@ -248,10 +248,13 @@ class Plant(object):
     def water_check(self):
         latest_visitor_timestamp = self.guest_check()
         if latest_visitor_timestamp > self.watered_timestamp:
-            self.watered_timestamp = latest_visitor_timestamp
+            visitor_delta_watered = latest_visitor_timestamp - self.watered_timestamp
+            if visitor_delta_watered <= (5 * (24 * 3600)):
+                self.watered_timestamp = latest_visitor_timestamp
         self.time_delta_watered = int(time.time()) - self.watered_timestamp
         if self.time_delta_watered <= (24 * 3600):
-            self.watered_24h = True
+            if not self.watered_24h:
+                self.watered_24h = True
             return True
         else:
             self.watered_24h = False
