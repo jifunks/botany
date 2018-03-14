@@ -231,8 +231,10 @@ class Plant(object):
                             self.visitors.append(element['user'])
                         if element['user'] not in visitors_this_check:
                             visitors_this_check.append(element['user'])
-                        if element['timestamp'] > latest_timestamp:
-                            latest_timestamp = element['timestamp']
+                        # prevent users from manually setting watered_time in the future
+                        if element['timestamp'] < int(time.time()):
+                            if element['timestamp'] > latest_timestamp:
+                                latest_timestamp = element['timestamp']
                     try:
                        self.update_visitor_db(visitors_this_check)
                     except:
