@@ -470,8 +470,8 @@ class CursedMenu(object):
                                 "that will grow into a beautiful plant. check\n"
                                 "in and water your plant every 24h to keep it\n"
                                 "growing. 5 days without water = death. your\n"
-                                "plant depends on you to live! more info is\n"
-                                "available in the readme :)\n"
+                                "plant depends on you & your friends to live!\n"
+                                "more info is available in the readme :)\n"
                                 "                               cheers,\n"
                                 "                               curio\n"
                                 )
