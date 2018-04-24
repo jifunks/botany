@@ -39,14 +39,14 @@ If your plant goes 5 days without water, it will die! Recruit your friends to wa
 
 ```
 {
-"description":"common singing blue seed-bearing poppy",
-"file_name":"/Users/jakefunke/.botany/jakefunke_plant.dat",
-"age":"0d:2h:3m:16s",
-"score":1730,
-"owner":"jakefunke",
-"is_dead":false,
-"last_watered":1489113197
-"generation": 2
+  "description": "common singing blue seed-bearing poppy",
+  "file_name": "/Users/jakefunke/.botany/jakefunke_plant.dat",
+  "age": "0d:2h:3m:16s",
+  "score": 1730,
+  "owner": "jakefunke",
+  "is_dead": false,
+  "last_watered": 1489113197,
+  "generation": 2
 }
 ```
 
