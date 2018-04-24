@@ -198,10 +198,10 @@ class CursedMenu(object):
         # display fancy water gauge
         if not self.plant.dead:
             water_gauge_str = self.water_gauge()
-            self.screen.addstr(5,14, water_gauge_str, curses.A_NORMAL)
+            self.screen.addstr(4,14, water_gauge_str, curses.A_NORMAL)
         else:
-            self.screen.addstr(5,13, clear_bar, curses.A_NORMAL)
-            self.screen.addstr(5,13, " (   RIP   )", curses.A_NORMAL)
+            self.screen.addstr(4,13, clear_bar, curses.A_NORMAL)
+            self.screen.addstr(4,14, "(   RIP   )", curses.A_NORMAL)
 
         # draw cute ascii from files
         self.draw_plant_ascii(self.plant)
