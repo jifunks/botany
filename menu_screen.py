@@ -302,6 +302,7 @@ class CursedMenu(object):
             self.infotoggle = 0
 
         # print garden information OR clear it
+        # TODO: pagination control with hjkl/arrow keys/esc-or-x to close
         for page_num, page in enumerate(plant_table_pages, 1):
             # Print page text
             self.draw_info_text(page)

@@ -343,6 +343,10 @@ class Plant(object):
 class DataManager(object):
     # handles user data, puts a .botany dir in user's home dir (OSX/Linux)
     # handles shared data with sqlite db
+    # TODO: .dat save should only happen on mutation, water, death, exit,
+    # harvest, otherwise
+    # data hasn't changed...
+    # can write json whenever bc this isn't ever read for data within botany
 
     user_dir = os.path.expanduser("~")
     botany_dir = os.path.join(user_dir,'.botany')
@@ -398,7 +402,8 @@ class DataManager(object):
             time.sleep(.1)
 
     def autosave(self, this_plant):
-        # running on thread, saves plant every 5s
+        # running on thread, saves plant every 5s TODO: this is unnecessary
+        # and breaks shit probably
         file_update_count = 0
         while True:
             file_update_count += 1
