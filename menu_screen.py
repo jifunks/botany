@@ -670,7 +670,14 @@ class CursedMenu(object):
 
     def __exit__(self):
         self.exit = True
+        cleanup()
+
+def cleanup():
+    try:
         curses.curs_set(2)
-        curses.endwin()
-        os.system('clear')
+    except curses.error:
+        # cursor not supported; just ignore
+        pass
+    curses.endwin()
+    os.system('clear')
 
