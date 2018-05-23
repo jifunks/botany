@@ -18,7 +18,8 @@ class CursedMenu(object):
         self.screen = curses.initscr()
         curses.noecho()
         curses.raw()
-        curses.start_color()
+        if curses.has_colors():
+            curses.start_color()
         try:
             curses.curs_set(0)
         except curses.error:
@@ -35,8 +36,11 @@ class CursedMenu(object):
         self.infotoggle = 0
         self.maxy, self.maxx = self.screen.getmaxyx()
         # Highlighted and Normal line definitions
-        self.define_colors()
-        self.highlighted = curses.color_pair(1)
+        if curses.has_colors():
+            self.define_colors()
+            self.highlighted = curses.color_pair(1)
+        else:
+            self.highlighted = curses.A_REVERSE
         self.normal = curses.A_NORMAL
         # Threaded screen update for live changes
         screen_thread = threading.Thread(target=self.update_plant_live, args=())
