@@ -543,8 +543,10 @@ class DataManager(object):
     def save_plant(self, this_plant):
         # create savefile
         this_plant.last_time = int(time.time())
-        with open(self.savefile_path, 'wb') as f:
+        temp_path = self.savefile_path + ".temp"
+        with open(temp_path, 'wb') as f:
             pickle.dump(this_plant, f, protocol=2)
+        os.rename(temp_path, self.savefile_path)
 
     def data_write_json(self, this_plant):
         # create personal json file for user to use outside of the game (website?)
@@ -598,8 +600,10 @@ class DataManager(object):
         this_harvest[this_plant_id] = plant_info
 
         # dump harvest file
-        with open(self.harvest_file_path, 'wb') as f:
+        temp_path = self.harvest_file_path + ".temp"
+        with open(temp_path, 'wb') as f:
             pickle.dump(this_harvest, f, protocol=2)
+        os.rename(temp_path, self.harvest_file_path)
         # dump json file
         with open(self.harvest_json_path, 'w') as outfile:
             json.dump(this_harvest, outfile)
