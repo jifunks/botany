@@ -16,22 +16,23 @@ class DataManager(object):
     # data hasn't changed...
     # can write json whenever bc this isn't ever read for data within botany
 
-    user_dir = os.path.expanduser("~")
-    botany_dir = os.path.join(user_dir,'.botany')
-    game_dir = os.path.dirname(os.path.realpath(__file__))
-    this_user = getpass.getuser()
+    def __init__(self, this_user = None):
+        self.this_user = this_user
+        if this_user is None:
+            self.this_user = getpass.getuser()
+        self.user_dir = os.path.expanduser("~" + self.this_user)
+        self.botany_dir = os.path.join(self.user_dir,'.botany')
+        self.game_dir = os.path.dirname(os.path.realpath(__file__))
 
-    savefile_name = this_user + '_plant.dat'
-    savefile_path = os.path.join(botany_dir, savefile_name)
-    #set this.savefile_path to guest_garden path
+        self.savefile_name = self.this_user + '_plant.dat'
+        self.savefile_path = os.path.join(self.botany_dir, self.savefile_name)
+        #set this.savefile_path to guest_garden path
 
-    garden_db_path = os.path.join(game_dir, 'sqlite/garden_db.sqlite')
-    garden_json_path = os.path.join(game_dir, 'garden_file.json')
-    harvest_file_path = os.path.join(botany_dir, 'harvest_file.dat')
-    harvest_json_path = os.path.join(botany_dir, 'harvest_file.json')
+        self.garden_db_path = os.path.join(self.game_dir, 'sqlite/garden_db.sqlite')
+        self.garden_json_path = os.path.join(self.game_dir, 'garden_file.json')
+        self.harvest_file_path = os.path.join(self.botany_dir, 'harvest_file.dat')
+        self.harvest_json_path = os.path.join(self.botany_dir, 'harvest_file.json')
 
-    def __init__(self):
-        self.this_user = getpass.getuser()
         # check if instance is already running
         # check for .botany dir in home
         try:
