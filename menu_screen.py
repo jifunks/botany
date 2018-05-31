@@ -8,6 +8,7 @@ import random
 import getpass
 import json
 import sqlite3
+from data_manager import DataManager
 
 class CursedMenu(object):
     #TODO: name your plant
@@ -621,10 +622,14 @@ class CursedMenu(object):
         if os.path.isfile(guest_visitor_file):
             self.water_on_visit(guest_visitor_file)
             self.screen.addstr(16, 2, "...you watered ~{}'s {}...".format(str(guest_garden), guest_plant_description))
+            guest_dm = DataManager(guest_garden)
+            guest_plant = guest_dm.load_plant()
+            self.draw_plant_ascii(guest_plant)
         else:
             self.screen.addstr(16, 2, "i can't seem to find directions to {}...".format(guest_garden))
         self.screen.getch()
         self.clear_info_pane()
+        self.draw_plant_ascii(self.this_plant)
 
     def water_on_visit(self, guest_visitor_file):
         visitor_data = {}
