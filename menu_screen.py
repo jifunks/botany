@@ -223,7 +223,7 @@ class CursedMenu(object):
         # updates plant data on menu screen, live!
         while not self.exit:
             self.plant_string = self.plant.parse_plant()
-            self.plant_ticks = str(self.plant.ticks)
+            self.plant_ticks = str(int(self.plant.ticks))
             if self.initialized:
                 self.update_options()
                 self.draw()
