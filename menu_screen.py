@@ -29,6 +29,7 @@ class CursedMenu(object):
             pass
         self.screen.keypad(1)
         self.plant = this_plant
+        self.visited_plant = None
         self.user_data = this_data
         self.plant_string = self.plant.parse_plant()
         self.plant_ticks = str(self.plant.ticks)
@@ -208,7 +209,11 @@ class CursedMenu(object):
             self.screen.addstr(4,14, "(   RIP   )", curses.A_NORMAL)
 
         # draw cute ascii from files
-        self.draw_plant_ascii(self.plant)
+        if self.visited_plant:
+            # Needed to prevent drawing over a visited plant
+            self.draw_plant_ascii(self.visited_plant)
+        else:
+            self.draw_plant_ascii(self.plant)
 
     def water_gauge(self):
         # build nice looking water gauge
@@ -617,14 +622,19 @@ class CursedMenu(object):
             with open(guest_json) as f:
                 visitor_data = json.load(f)
                 guest_plant_description = visitor_data['description']
+                self.visited_plant = self.get_visited_plant(visitor_data)
         guest_visitor_file = home_folder + "/{}/.botany/visitors.json".format(guest_garden, guest_garden)
         if os.path.isfile(guest_visitor_file):
             self.water_on_visit(guest_visitor_file)
             self.screen.addstr(16, 2, "...you watered ~{}'s {}...".format(str(guest_garden), guest_plant_description))
+            if self.visited_plant:
+                self.draw_plant_ascii(self.visited_plant)
         else:
             self.screen.addstr(16, 2, "i can't seem to find directions to {}...".format(guest_garden))
         self.screen.getch()
         self.clear_info_pane()
+        self.draw_plant_ascii(self.plant)
+        self.visited_plant = None
 
     def water_on_visit(self, guest_visitor_file):
         visitor_data = {}
@@ -635,6 +645,34 @@ class CursedMenu(object):
             visitor_data.append(guest_data)
             with open(guest_visitor_file, mode='w') as f:
                 f.write(json.dumps(visitor_data, indent=2))
+
+    def get_visited_plant(self, visitor_data):
+        """ Returns a drawable pseudo plant object from json data """
+        class VisitedPlant: pass
+        plant = VisitedPlant()
+        plant.stage = 0
+        plant.species = 0
+
+        if "is_dead" not in visitor_data:
+            return None
+        plant.dead = visitor_data["is_dead"]
+        if plant.dead:
+            return plant
+
+        if "stage" in visitor_data:
+            stage = visitor_data["stage"]
+            if stage in self.plant.stage_list:
+                plant.stage = self.plant.stage_list.index(stage)
+
+        if "species" in visitor_data:
+            species = visitor_data["species"]
+            if species in self.plant.species_list:
+                plant.species = self.plant.species_list.index(species)
+            else:
+                return None
+        elif plant.stage > 1:
+            return None
+        return plant
 
     def handle_request(self, request):
         # Menu options call functions here
