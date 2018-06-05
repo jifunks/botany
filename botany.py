@@ -225,6 +225,12 @@ class Plant(object):
         if os.path.isfile(visitor_filepath):
             with open(visitor_filepath, 'r') as visitor_file:
                 data = json.load(visitor_file)
+                # TODO: this needs to check if the latest timestamp is greater
+                # than 5 days
+                # need to check for delta of at minimum 5 days between waters
+                # to make sure plant is alive
+                # check each visitor time, calculate delta between this and last
+                # watering
                 if data:
                     for element in data:
                         if element['user'] not in self.visitors:
@@ -233,6 +239,9 @@ class Plant(object):
                             visitors_this_check.append(element['user'])
                         # prevent users from manually setting watered_time in the future
                         if element['timestamp'] < int(time.time()):
+                            # need to check here for delta between this
+                            # element and last element (also json load might
+                            # not be sorted...
                             if element['timestamp'] > latest_timestamp:
                                 latest_timestamp = element['timestamp']
                     try:
