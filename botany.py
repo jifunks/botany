@@ -446,7 +446,7 @@ class DataManager(object):
                 self.last_water_gain = time.time()
             else:
                 ticks_to_add = 0
-            this_plant.ticks += ticks_to_add
+            this_plant.ticks += ticks_to_add * (0.2 * (self.generation - 1) + 1)
         return this_plant
 
     def plant_age_convert(self,this_plant):
