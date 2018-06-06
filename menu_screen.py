@@ -8,6 +8,8 @@ import random
 import getpass
 import json
 import sqlite3
+import string
+import re
 
 class CursedMenu(object):
     #TODO: name your plant
@@ -276,23 +278,37 @@ class CursedMenu(object):
 
     def format_garden_data(self,this_garden):
         # Returns list of lists (pages) of garden entries
-        plant_table = ""
+        plant_table = []
         for plant_id in this_garden:
             if this_garden[plant_id]:
                 if not this_garden[plant_id]["dead"]:
                     this_plant = this_garden[plant_id]
-                    entry = "{:14} - {:>16} - {:>8}p - {}\n".format(
-                        this_plant["owner"],
-                        this_plant["age"],
-                        int(this_plant["score"]),
-                        this_plant["description"]
-                    )
-                    plant_table += entry
-        # build list of n entries per page
-        entries_per_page = self.maxy - 16
-        garden_list = plant_table.splitlines()
-        paginated_list = [garden_list[i:i+entries_per_page] for i in range(0,len(garden_list),entries_per_page)]
-        return paginated_list
+                    plant_table.append((this_plant["owner"],
+                                        this_plant["age"],
+                                        int(this_plant["score"]),
+                                        this_plant["description"]))
+        return plant_table
+
+    def format_garden_entry(self, entry):
+        return "{:14} - {:>16} - {:>8}p - {}".format(*entry)
+
+    def sort_garden_table(self, table, column, ascending):
+        """ Sort table in place by a specified column """
+        return table.sort(key=lambda x: x[column], reverse=not ascending)
+
+    def filter_garden_table(self, table, pattern):
+        """ Filter table using a pattern, and return the new table """
+        def filterfunc(entry):
+            if len(pattern) == 0:
+                return True
+            entry_txt = self.format_garden_entry(entry)
+            try:
+                result = bool(re.search(pattern, entry_txt))
+            except Exception as e:
+                # In case of invalid regex, don't match anything
+                result = False
+            return result
+        return list(filter(filterfunc, table))
 
     def draw_garden(self):
         # draws community garden
@@ -300,30 +316,80 @@ class CursedMenu(object):
         this_garden = self.user_data.retrieve_garden_from_db()
         # format data
         self.clear_info_pane()
-        plant_table_pages = []
-        if self.infotoggle != 2:
-            # if infotoggle isn't 2, the screen currently displays other stuff
-            plant_table_pages = self.format_garden_data(this_garden)
-            self.infotoggle = 2
-        else:
+
+        if self.infotoggle == 2:
             # the screen IS currently showing the garden (1 page), make the
             # text a bunch of blanks to clear it out
             self.infotoggle = 0
+            return
+
+        # if infotoggle isn't 2, the screen currently displays other stuff
+        plant_table_orig = self.format_garden_data(this_garden)
+        self.infotoggle = 2
 
         # print garden information OR clear it
         # TODO: pagination control with hjkl/arrow keys/esc-or-x to close
-        for page_num, page in enumerate(plant_table_pages, 1):
-            # Print page text
+        index = 0
+        sort_column, sort_ascending = 0, True
+        sort_keys = ["n", "a", "s", "d"] # Name, Age, Score, Description
+        plant_table = plant_table_orig
+        self.sort_garden_table(plant_table, sort_column, sort_ascending)
+        while True:
+            entries_per_page = self.maxy - 16
+            index_max = min(len(plant_table), index + entries_per_page)
+            plants = plant_table[index:index_max]
+            page = [self.format_garden_entry(entry) for entry in plants]
             self.draw_info_text(page)
-            if len(plant_table_pages) > 1:
-                # Multiple pages, paginate and require keypress
-                page_text = "(%d/%d) --- press any key ---" % (page_num, len(plant_table_pages))
-                self.screen.addstr(self.maxy-2, 2, page_text)
-                self.screen.getch()
-                self.screen.refresh()
-                # Clear page before drawing next
-                self.clear_info_pane()
-                self.infotoggle = 0
+            # Multiple pages, paginate and require keypress
+            page_text = "(%d-%d/%d) --- press q to quit ---" % (index, index_max, len(plant_table))
+            self.screen.addstr(self.maxy-2, 2, page_text)
+            self.screen.refresh()
+            c = self.screen.getch()
+            self.infotoggle = 0
+
+            # Quit
+            if c == ord("q") or c == ord("x") or c == 27:
+                break
+            # Next page
+            elif c in [curses.KEY_ENTER, curses.KEY_NPAGE, ord(" "), ord("\n")]:
+                index += entries_per_page
+                if index >= len(plant_table):
+                    break
+            # Previous page
+            elif c == curses.KEY_BACKSPACE or c == curses.KEY_PPAGE:
+                index = max(index - entries_per_page, 0)
+            # Next line
+            elif c == ord("j") or c == curses.KEY_DOWN:
+                index = max(min(index + 1, len(plant_table) - 1), 0)
+            # Previous line
+            elif c == ord("k") or c == curses.KEY_UP:
+                index = max(index - 1, 0)
+            # Sort entries
+            elif c == ord("s"):
+                c = self.screen.getch()
+                column = -1
+                if c < 255 and chr(c) in sort_keys:
+                    column = sort_keys.index(chr(c))
+                elif ord("1") <= c <= ord("4"):
+                    column = c - ord("1")
+                if column != -1:
+                    if sort_column == column:
+                        sort_ascending = not sort_ascending
+                    else:
+                        sort_column = column
+                        sort_ascending = True
+                    self.sort_garden_table(plant_table, sort_column, sort_ascending)
+            # Filter entries
+            elif c == ord("/") or c == ord("f"):
+                self.screen.addstr(self.maxy-2, 2, "Filter: " + " " * (len(page_text)-8))
+                pattern = self.get_user_string(10, self.maxy-2, lambda x: x in string.printable)
+                plant_table = self.filter_garden_table(plant_table_orig, pattern)
+                self.sort_garden_table(plant_table, sort_column, sort_ascending)
+                index = 0
+
+            # Clear page before drawing next
+            self.clear_info_pane()
+        self.clear_info_pane()
 
     def get_plant_description(self, this_plant):
         output_text = ""
@@ -578,8 +644,8 @@ class CursedMenu(object):
             visitor_block = 'nobody :('
         return visitor_block
 
-    def get_user_string(self, xpos=3, ypos=15):
-        # doesn't allow non-alphanumeric text
+    def get_user_string(self, xpos=3, ypos=15, filterfunc=str.isalnum):
+        # filter allowed characters using filterfunc, alphanumeric by default
         user_string = ""
         user_input = 0
         while user_input != 10:
@@ -588,9 +654,9 @@ class CursedMenu(object):
             if user_input == 127 or user_input == 263:
                 if len(user_string) > 0:
                     user_string = user_string[:-1]
-                    self.screen.addstr(15, 3, " " * (self.maxx-2) )
-            if user_input in range(256):
-                if chr(user_input).isalnum():
+                    self.screen.addstr(ypos, xpos, " " * (self.maxx-xpos-1))
+            if user_input < 256 and user_input != 10:
+                if filterfunc(chr(user_input)):
                     user_string += chr(user_input)
             self.screen.addstr(ypos, xpos, str(user_string))
             self.screen.refresh()
