@@ -284,7 +284,7 @@ class CursedMenu(object):
                     entry = "{:14} - {:>16} - {:>8}p - {}\n".format(
                         this_plant["owner"],
                         this_plant["age"],
-                        this_plant["score"],
+                        int(this_plant["score"]),
                         this_plant["description"]
                     )
                     plant_table += entry
@@ -505,6 +505,8 @@ class CursedMenu(object):
             info_text = info_text.splitlines()
         for y, line in enumerate(info_text, 2):
             this_y = y+12 + y_offset
+            if len(line) > self.maxx - 3:
+                line = line[:self.maxx-3]
             if this_y < self.maxy:
                 self.screen.addstr(this_y, 2, line, curses.A_NORMAL)
         self.screen.refresh()
