@@ -10,6 +10,7 @@ import json
 import sqlite3
 import string
 import re
+import completer
 
 class CursedMenu(object):
     #TODO: name your plant
@@ -644,20 +645,30 @@ class CursedMenu(object):
             visitor_block = 'nobody :('
         return visitor_block
 
-    def get_user_string(self, xpos=3, ypos=15, filterfunc=str.isalnum):
+    def get_user_string(self, xpos=3, ypos=15, filterfunc=str.isalnum, completer=None):
         # filter allowed characters using filterfunc, alphanumeric by default
         user_string = ""
         user_input = 0
+        if completer:
+            completer = completer(self)
         while user_input != 10:
             user_input = self.screen.getch()
             # osx and unix backspace chars...
             if user_input == 127 or user_input == 263:
                 if len(user_string) > 0:
                     user_string = user_string[:-1]
+                    if completer:
+                        completer.update_input(user_string)
                     self.screen.addstr(ypos, xpos, " " * (self.maxx-xpos-1))
-            if user_input < 256 and user_input != 10:
+            elif user_input in [ord('\t'), curses.KEY_BTAB] and completer:
+                direction = 1 if user_input == ord('\t') else -1
+                user_string = completer.complete(direction)
+                self.screen.addstr(ypos, xpos, " " * (self.maxx-xpos-1))
+            elif user_input < 256 and user_input != 10:
                 if filterfunc(chr(user_input)):
                     user_string += chr(user_input)
+                    if completer:
+                        completer.update_input(user_string)
             self.screen.addstr(ypos, xpos, str(user_string))
             self.screen.refresh()
         return user_string
@@ -674,7 +685,7 @@ class CursedMenu(object):
         weekly_visitor_text = self.get_weekly_visitors()
         self.draw_info_text("this week you've been visited by: ", 6)
         self.draw_info_text(weekly_visitor_text, 7)
-        guest_garden = self.get_user_string()
+        guest_garden = self.get_user_string(completer = completer.LoginCompleter)
         if not guest_garden:
             self.clear_info_pane()
             return None
