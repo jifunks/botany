@@ -341,7 +341,7 @@ class CursedMenu(object):
             page = [self.format_garden_entry(entry) for entry in plants]
             self.draw_info_text(page)
             # Multiple pages, paginate and require keypress
-            page_text = "(%d-%d/%d) --- press q to quit ---" % (index, index_max, len(plant_table))
+            page_text = "(%d-%d/%d) | sp/next | bksp/prev | s <col #>/sort | f/filter | q/quit" % (index, index_max, len(plant_table))
             self.screen.addstr(self.maxy-2, 2, page_text)
             self.screen.refresh()
             c = self.screen.getch()
