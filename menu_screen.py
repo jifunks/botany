@@ -294,7 +294,17 @@ class CursedMenu(object):
 
     def sort_garden_table(self, table, column, ascending):
         """ Sort table in place by a specified column """
-        return table.sort(key=lambda x: x[column], reverse=not ascending)
+        def key(entry):
+            entry = entry[column]
+            # In when sorting ages, convert to seconds
+            if column == 1:
+                coeffs = [24*60*60, 60*60, 60, 1]
+                nums = [int(n[:-1]) for n in entry.split(":")]
+                if len(nums) == len(coeffs):
+                    entry = sum(nums[i] * coeffs[i] for i in range(len(nums)))
+            return entry
+
+        return table.sort(key=key, reverse=not ascending)
 
     def filter_garden_table(self, table, pattern):
         """ Filter table using a pattern, and return the new table """
