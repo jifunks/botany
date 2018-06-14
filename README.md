@@ -6,7 +6,7 @@ by Jake Funke - jifunks@gmail.com - tilde.town/~curiouser - http://jakefunke.onl
 A command line, realtime, community plant buddy.
 
 You've been given a seed that will grow into a beautiful plant.
-Check in and water your plant every 24h to keep it growing. 5 days without water = death. Your plant depends on you to live!
+Check in and water your plant every 24h to keep it growing. 5 days without water = death. Your plant depends on you and your friends to live!
 
 *"We do not 'come into' this world; we come out of it, as leaves from a tree." - Alan Watts*
 
@@ -15,14 +15,15 @@ botany is designed for unix-based systems. Clone into a local directory using `$
 
 Run with `$ python botany.py`.
 
-*Note - botany.py must initially be run by the user who cloned/unzipped
-botany.py - this initalizes the shared data file permissions.*
+*Note - botany.py must initially be run by the user who cloned/unzipped botany.py - this initalizes the shared data file permissions.*
 
 Water your seed to get started. You can come and go as you please and your plant continues to grow.
 
 Make sure to come back and water every 24 hours or your plant won't grow.
 
 If your plant goes 5 days without water, it will die! Recruit your friends to water your plant for you!
+
+A once-weekly cron on clear_weekly_users.py should be set up to keep weekly visitors tidy.
 
 
 ## features
@@ -39,14 +40,18 @@ If your plant goes 5 days without water, it will die! Recruit your friends to wa
 
 ```
 {
-  "description": "common singing blue seed-bearing poppy",
-  "file_name": "/Users/jakefunke/.botany/jakefunke_plant.dat",
-  "age": "0d:2h:3m:16s",
-  "score": 1730,
-  "owner": "jakefunke",
-  "is_dead": false,
-  "last_watered": 1489113197,
-  "generation": 2
+  "description":"common screaming mature jade plant",
+  "generation":1,
+  "file_name":"/home/curiouser/.botany/curiouser_plant.dat",
+  "owner":"curiouser",
+  "species":"jade plant",
+  "stage":"mature",
+  "age":"24d:2h:16m:19s",
+  "rarity":"common",
+  "score":955337.0,
+  "mutation":"screaming",
+  "last_watered":1529007007,
+  "is_dead":false
 }
 ```
 
@@ -63,4 +68,4 @@ If your plant goes 5 days without water, it will die! Recruit your friends to wa
 * Recommended: 80x24 minimum terminal, fixed-width font
 
 ## credits
-* thank you tilde.town for inspiration!
+* thank you [tilde.town](http://tilde.town/) for inspiration!
