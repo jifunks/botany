@@ -220,17 +220,11 @@ class Plant(object):
         user_dir = os.path.expanduser("~")
         botany_dir = os.path.join(user_dir,'.botany')
         visitor_filepath = os.path.join(botany_dir,'visitors.json')
-        latest_timestamp = 0
+        guest_timestamps = []
         visitors_this_check = []
         if os.path.isfile(visitor_filepath):
             with open(visitor_filepath, 'r') as visitor_file:
                 data = json.load(visitor_file)
-                # TODO: this needs to check if the latest timestamp is greater
-                # than 5 days
-                # need to check for delta of at minimum 5 days between waters
-                # to make sure plant is alive
-                # check each visitor time, calculate delta between this and last
-                # watering
                 if data:
                     for element in data:
                         if element['user'] not in self.visitors:
@@ -239,11 +233,7 @@ class Plant(object):
                             visitors_this_check.append(element['user'])
                         # prevent users from manually setting watered_time in the future
                         if element['timestamp'] < int(time.time()):
-                            # need to check here for delta between this
-                            # element and last element (also json load might
-                            # not be sorted...
-                            if element['timestamp'] > latest_timestamp:
-                                latest_timestamp = element['timestamp']
+                            guest_timestamps.append(element['timestamp'])
                     try:
                        self.update_visitor_db(visitors_this_check)
                     except:
@@ -254,14 +244,18 @@ class Plant(object):
             with open(visitor_filepath, mode='w') as f:
                 json.dump([], f)
             os.chmod(visitor_filepath, 0666)
-        return latest_timestamp
+        return guest_timestamps
 
     def water_check(self):
-        latest_visitor_timestamp = self.guest_check()
-        if latest_visitor_timestamp > self.watered_timestamp:
-            visitor_delta_watered = latest_visitor_timestamp - self.watered_timestamp
-            if visitor_delta_watered <= (5 * (24 * 3600)):
-                self.watered_timestamp = latest_visitor_timestamp
+        visitor_timestamps = [self.watered_timestamp] + self.guest_check()
+        visitor_timestamps.sort()
+        # calculate # of days between each water in log
+        timestamp_diffs = [(j-i)/86400.0 for i, j in zip(visitor_timestamps[:-1], visitor_timestamps[1:])]
+        # check to make sure each time diff is <= 5 days otherwise the plant
+        # hasn't been watered at sub-5-day intervals, which means it dies
+        # otherwise it will take the highest timestamp in the list
+        if all(i <= 5 for i in timestamp_diffs):
+            self.watered_timestamp = visitor_timestamps[-1]
         self.time_delta_watered = int(time.time()) - self.watered_timestamp
         if self.time_delta_watered <= (24 * 3600):
             if not self.watered_24h:
