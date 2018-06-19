@@ -730,10 +730,13 @@ class CursedMenu(object):
                 self.visited_plant = self.get_visited_plant(visitor_data)
         guest_visitor_file = home_folder + "/{}/.botany/visitors.json".format(guest_garden, guest_garden)
         if os.path.isfile(guest_visitor_file):
-            self.water_on_visit(guest_visitor_file)
-            self.screen.addstr(16, 2, "...you watered ~{}'s {}...".format(str(guest_garden), guest_plant_description))
-            if self.visited_plant:
-                self.draw_plant_ascii(self.visited_plant)
+            water_success = self.water_on_visit(guest_visitor_file)
+            if water_success:
+                self.screen.addstr(16, 2, "...you watered ~{}'s {}...".format(str(guest_garden), guest_plant_description))
+                if self.visited_plant:
+                    self.draw_plant_ascii(self.visited_plant)
+            else:
+                self.screen.addstr(16, 2, "{}'s garden is locked, but you can see in...".format(guest_garden))
         else:
             self.screen.addstr(16, 2, "i can't seem to find directions to {}...".format(guest_garden))
         self.screen.getch()
@@ -745,11 +748,14 @@ class CursedMenu(object):
         visitor_data = {}
         guest_data = {'user': getpass.getuser(), 'timestamp': int(time.time())}
         if os.path.isfile(guest_visitor_file):
+            if not os.access(guest_visitor_file, os.W_OK):
+                return False
             with open(guest_visitor_file) as f:
                 visitor_data = json.load(f)
             visitor_data.append(guest_data)
             with open(guest_visitor_file, mode='w') as f:
                 f.write(json.dumps(visitor_data, indent=2))
+            return True
 
     def get_visited_plant(self, visitor_data):
         """ Returns a drawable pseudo plant object from json data """
