@@ -34,7 +34,7 @@ class CursedMenu(object):
         self.visited_plant = None
         self.user_data = this_data
         self.plant_string = self.plant.parse_plant()
-        self.plant_ticks = str(self.plant.ticks)
+        self.plant_ticks = str(int(self.plant.ticks))
         self.exit = False
         self.infotoggle = 0
         self.maxy, self.maxx = self.screen.getmaxyx()
@@ -49,6 +49,8 @@ class CursedMenu(object):
         screen_thread = threading.Thread(target=self.update_plant_live, args=())
         screen_thread.daemon = True
         screen_thread.start()
+        # Recusive lock to prevent both threads from drawing at the same time
+        self.screen_lock = threading.RLock()
         self.screen.clear()
         self.show(["water","look","garden","visit", "instructions"], title=' botany ', subtitle='options')
 
@@ -95,6 +97,7 @@ class CursedMenu(object):
     def draw(self):
         # Draw the menu and lines
         self.maxy, self.maxx = self.screen.getmaxyx()
+        self.screen_lock.acquire()
         self.screen.refresh()
         try:
             self.draw_default()
@@ -106,6 +109,7 @@ class CursedMenu(object):
             self.screen.refresh()
             self.__exit__()
             traceback.print_exc()
+        self.screen_lock.release()
 
     def draw_menu(self):
         # Actually draws the menu and handles branching
@@ -132,9 +136,11 @@ class CursedMenu(object):
         this_file = open(this_filename,"r")
         this_string = this_file.readlines()
         this_file.close()
+        self.screen_lock.acquire()
         for y, line in enumerate(this_string, 2):
             self.screen.addstr(ypos+y, xpos, line, curses.A_NORMAL)
         # self.screen.refresh()
+        self.screen_lock.release()
 
     def draw_plant_ascii(self, this_plant):
         ypos = 0
@@ -182,6 +188,7 @@ class CursedMenu(object):
     def draw_default(self):
         # draws default menu
         clear_bar = " " * (int(self.maxx*2/3))
+        self.screen_lock.acquire()
         self.screen.addstr(1, 2, self.title, curses.A_STANDOUT) # Title for this menu
         self.screen.addstr(3, 2, self.subtitle, curses.A_BOLD) #Subtitle for this menu
         # clear menu on screen
@@ -216,6 +223,7 @@ class CursedMenu(object):
             self.draw_plant_ascii(self.visited_plant)
         else:
             self.draw_plant_ascii(self.plant)
+        self.screen_lock.release()
 
     def water_gauge(self):
         # build nice looking water gauge
@@ -349,11 +357,13 @@ class CursedMenu(object):
             index_max = min(len(plant_table), index + entries_per_page)
             plants = plant_table[index:index_max]
             page = [self.format_garden_entry(entry) for entry in plants]
+            self.screen_lock.acquire()
             self.draw_info_text(page)
             # Multiple pages, paginate and require keypress
             page_text = "(%d-%d/%d) | sp/next | bksp/prev | s <col #>/sort | f/filter | q/quit" % (index, index_max, len(plant_table))
             self.screen.addstr(self.maxy-2, 2, page_text)
             self.screen.refresh()
+            self.screen_lock.release()
             c = self.screen.getch()
             self.infotoggle = 0
 
@@ -568,15 +578,18 @@ class CursedMenu(object):
 
     def clear_info_pane(self):
         # Clears bottom part of screen
+        self.screen_lock.acquire()
         clear_bar = " " * (self.maxx - 3)
         this_y = 14
         while this_y < self.maxy:
-             self.screen.addstr(this_y, 2, clear_bar, curses.A_NORMAL)
-             this_y += 1
+            self.screen.addstr(this_y, 2, clear_bar, curses.A_NORMAL)
+            this_y += 1
         self.screen.refresh()
+        self.screen_lock.release()
 
     def draw_info_text(self, info_text, y_offset = 0):
         # print lines of text to info pane at bottom of screen
+        self.screen_lock.acquire()
         if type(info_text) is str:
             info_text = info_text.splitlines()
         for y, line in enumerate(info_text, 2):
@@ -586,6 +599,7 @@ class CursedMenu(object):
             if this_y < self.maxy:
                 self.screen.addstr(this_y, 2, line, curses.A_NORMAL)
         self.screen.refresh()
+        self.screen_lock.release()
 
     def harvest_confirmation(self):
         self.clear_info_pane()
@@ -660,6 +674,7 @@ class CursedMenu(object):
         user_input = 0
         while user_input != 10:
             user_input = self.screen.getch()
+            self.screen_lock.acquire()
             # osx and unix backspace chars...
             if user_input == 127 or user_input == 263:
                 if len(user_string) > 0:
@@ -670,6 +685,7 @@ class CursedMenu(object):
                     user_string += chr(user_input)
             self.screen.addstr(ypos, xpos, str(user_string))
             self.screen.refresh()
+            self.screen_lock.release()
         return user_string
 
     def visit_handler(self):
