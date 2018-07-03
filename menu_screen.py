@@ -129,6 +129,10 @@ class CursedMenu(object):
             self.screen.refresh()
             self.__exit__()
             #traceback.print_exc()
+        except IOError as exception:
+            self.screen.clear()
+            self.screen.refresh()
+            self.__exit__()
 
     def ascii_render(self, filename, ypos, xpos):
         # Prints ASCII art from file at given coordinates
@@ -251,6 +255,8 @@ class CursedMenu(object):
             user_in = self.screen.getch() # Gets user input
         except Exception as e:
             self.__exit__()
+        if user_in == -1: # Input comes from pipe/file and is closed
+            raise IOError
         ## DEBUG KEYS - enable these lines to see curses key codes
         # self.screen.addstr(1, 1, str(user_in), curses.A_NORMAL)
         # self.screen.refresh()
@@ -366,6 +372,8 @@ class CursedMenu(object):
             self.screen.refresh()
             self.screen_lock.release()
             c = self.screen.getch()
+            if c == -1: # Input comes from pipe/file and is closed
+                raise IOError
             self.infotoggle = 0
 
             # Quit
@@ -388,6 +396,8 @@ class CursedMenu(object):
             # Sort entries
             elif c == ord("s"):
                 c = self.screen.getch()
+                if c == -1: # Input comes from pipe/file and is closed
+                    raise IOError
                 column = -1
                 if c < 255 and chr(c) in sort_keys:
                     column = sort_keys.index(chr(c))
@@ -617,6 +627,8 @@ class CursedMenu(object):
             user_in = self.screen.getch() # Gets user input
         except Exception as e:
             self.__exit__()
+        if user_in == -1: # Input comes from pipe/file and is closed
+            raise IOError
 
         if user_in in [ord('Y'), ord('y')]:
             self.plant.start_over()
@@ -677,6 +689,8 @@ class CursedMenu(object):
             completer = completer(self)
         while user_input != 10:
             user_input = self.screen.getch()
+            if user_input == -1: # Input comes from pipe/file and is closed
+                raise IOError
             self.screen_lock.acquire()
             # osx and unix backspace chars...
             if user_input == 127 or user_input == 263:
