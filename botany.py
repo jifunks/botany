@@ -118,6 +118,10 @@ class Plant(object):
         'luminous',
         'cosmic',
         'ethereal',
+        'cursed',
+        'buff',
+        'narcotic',
+        'gnu/linux',
     ]
 
     def __init__(self, this_filename, generation=1):
