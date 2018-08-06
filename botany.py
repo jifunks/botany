@@ -122,7 +122,9 @@ class Plant(object):
         'buff',
         'narcotic',
         'gnu/linux',
+        'abraxan', # rip dear friend
     ]
+
 
     def __init__(self, this_filename, generation=1):
         # Constructor
