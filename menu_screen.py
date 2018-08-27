@@ -760,7 +760,8 @@ class CursedMenu(object):
 
     def water_on_visit(self, guest_visitor_file):
         visitor_data = {}
-        guest_data = {'user': getpass.getuser(), 'timestamp': int(time.time())}
+        # using -1 here so that old running instances can be watered
+        guest_data = {'user': getpass.getuser(), 'timestamp': int(time.time()) - 1}
         if os.path.isfile(guest_visitor_file):
             if not os.access(guest_visitor_file, os.W_OK):
                 return False
