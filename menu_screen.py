@@ -11,6 +11,7 @@ import sqlite3
 import string
 import re
 import completer
+import datetime
 
 class CursedMenu(object):
     #TODO: name your plant
@@ -176,6 +177,8 @@ class CursedMenu(object):
         ]
         if this_plant.dead == True:
             self.ascii_render('rip.txt', ypos, xpos)
+        elif datetime.date.today().month == 10 and datetime.date.today().day == 31:
+            self.ascii_render('jackolantern.txt', ypos, xpos)
         elif this_plant.stage == 0:
             self.ascii_render('seed.txt', ypos, xpos)
         elif this_plant.stage == 1:

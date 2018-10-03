@@ -442,8 +442,8 @@ class DataManager(object):
         this_plant.migrate_properties()
 
         # get status since last login
-        is_dead = this_plant.dead_check()
         is_watered = this_plant.water_check()
+        is_dead = this_plant.dead_check()
 
         if not is_dead:
             if is_watered:
