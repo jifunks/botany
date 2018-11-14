@@ -261,7 +261,7 @@ class CursedMenu(object):
         if user_in == -1: # Input comes from pipe/file and is closed
             raise IOError
         ## DEBUG KEYS - enable these lines to see curses key codes
-        # self.screen.addstr(1, 1, str(user_in), curses.A_NORMAL)
+        # self.screen.addstr(2, 2, str(user_in), curses.A_NORMAL)
         # self.screen.refresh()
 
         # Resize sends curses.KEY_RESIZE, update display
@@ -707,7 +707,7 @@ class CursedMenu(object):
                 user_string = completer.complete(direction)
                 self.screen.addstr(ypos, xpos, " " * (self.maxx-xpos-1))
             elif user_input < 256 and user_input != 10:
-                if filterfunc(chr(user_input)):
+                if filterfunc(chr(user_input)) or chr(user_input) == '_':
                     user_string += chr(user_input)
                     if completer:
                         completer.update_input(user_string)
