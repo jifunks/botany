@@ -301,7 +301,7 @@ class CursedMenu(object):
             if this_garden[plant_id]:
                 if not this_garden[plant_id]["dead"]:
                     this_plant = this_garden[plant_id]
-                    plant_table.append((this_plant["owner"][:14],
+                    plant_table.append((this_plant["owner"],
                                         this_plant["age"],
                                         int(this_plant["score"]),
                                         this_plant["description"]))
