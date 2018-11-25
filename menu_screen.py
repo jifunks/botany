@@ -308,7 +308,7 @@ class CursedMenu(object):
         return plant_table
 
     def format_garden_entry(self, entry):
-        return "{:14} - {:>16} - {:>8}p - {}".format(*entry)
+        return "{:14.14} - {:>16} - {:>8}p - {}".format(*entry)
 
     def sort_garden_table(self, table, column, ascending):
         """ Sort table in place by a specified column """
