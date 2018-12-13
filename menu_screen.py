@@ -270,11 +270,14 @@ class CursedMenu(object):
             self.screen.clear()
             self.screen.refresh()
 
-        # enter and exit Keys are special cases
+        # enter, exit, and Q Keys are special cases
         if user_in == 10:
             return self.options[self.selected]
         if user_in == 27:
             return self.options[-1]
+        if user_in == 113:
+            self.selected = len(self.options) - 1
+            return
 
         # this is a number; check to see if we can set it
         if user_in >= ord('1') and user_in <= ord(str(min(6,len(self.options)))):
