@@ -79,16 +79,12 @@ class CursedMenu(object):
 
     def update_options(self):
         # Makes sure you can get a new plant if it dies
-        if self.plant.dead:
+        if self.plant.dead or self.plant.stage == 5:
             if "harvest" not in self.options:
                 self.options.insert(-1,"harvest")
         else:
-            if self.plant.stage == 5:
-                if "harvest" not in self.options:
-                    self.options.insert(-1,"harvest")
-            else:
-                if "harvest" in self.options:
-                    self.options.remove("harvest")
+            if "harvest" in self.options:
+                self.options.remove("harvest")
 
     def set_options(self, options):
         # Validates that the last option is "exit"
