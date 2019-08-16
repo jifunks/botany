@@ -276,7 +276,7 @@ class CursedMenu(object):
             return
 
         # this is a number; check to see if we can set it
-        if user_in >= ord('1') and user_in <= ord(str(min(6,len(self.options)))):
+        if user_in >= ord('1') and user_in <= ord(str(min(7,len(self.options)))):
             self.selected = user_in - ord('0') - 1 # convert keypress back to a number, then subtract 1 to get index
             return
 
