@@ -57,6 +57,7 @@ class CursedMenu(object):
         self.show(["water","look","garden","visit", "instructions"], title=' botany ', subtitle='options')
 
     def define_colors(self):
+        # TODO: implement colors
         # set curses color pairs manually
         curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
         curses.init_pair(2, curses.COLOR_WHITE, curses.COLOR_BLACK)
@@ -355,7 +356,6 @@ class CursedMenu(object):
         self.infotoggle = 2
 
         # print garden information OR clear it
-        # TODO: pagination control with hjkl/arrow keys/esc-or-x to close
         index = 0
         sort_column, sort_ascending = 0, True
         sort_keys = ["n", "a", "s", "d"] # Name, Age, Score, Description
