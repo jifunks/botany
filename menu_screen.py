@@ -564,7 +564,7 @@ class CursedMenu(object):
             # get plant description before printing
             output_string = self.get_plant_description(this_plant)
             growth_multiplier = 1 + (0.2 * (this_plant.generation-1))
-            output_string += "Generation: {}\nGrowth rate: {}".format(self.plant.generation, growth_multiplier)
+            output_string += "Generation: {}\nGrowth rate: {}x".format(self.plant.generation, growth_multiplier)
             self.draw_info_text(output_string)
             self.infotoggle = 1
         else:
