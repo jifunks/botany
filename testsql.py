@@ -40,10 +40,10 @@ def update_garden_db():
     #             )
     #             """.format(pid = "asdfasdf", pown = "jake", pdes = "big cool plant", page="25d", psco = str(25), pdead = str(False))
 
-    print c.execute(update_query)
+    print(c.execute(update_query))
     conn.commit()
     conn.close()
-    #print "bigggg booom"
+    #print("bigggg booom")
 
 def retrieve_garden_from_db(garden_db_path):
     # Builds a dict of dicts from garden sqlite db
@@ -68,7 +68,7 @@ def retrieve_garden_from_db(garden_db_path):
 #init_database()
 #update_garden_db()
 results = retrieve_garden_from_db(garden_db_path)
-print results
+print(results)
 
 
 # con = sqlite3.connect(garden_db_path) #
@@ -77,7 +77,7 @@ print results
 # cur.execute("select * from garden ORDER BY score desc") #
 # blah = cur.fetchall() #
 # con.close()
-# print blah
+# print(blah)
 
 
 

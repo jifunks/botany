@@ -13,7 +13,7 @@ Check in and water your plant every 24h to keep it growing. 5 days without water
 ## getting started
 botany is designed for unix-based systems. Clone into a local directory using `$ git clone https://github.com/jifunks/botany.git`.
 
-Run with `$ python botany.py`.
+Run with `$ python3 botany.py`.
 
 *Note - botany.py must initially be run by the user who cloned/unzipped botany.py - this initalizes the shared data file permissions.*
 
@@ -64,7 +64,7 @@ A once-weekly cron on clear_weekly_users.py should be set up to keep weekly visi
 
 ## requirements
 * Unix-based OS (Mac, Linux)
-* Python 2.x
+* Python 3.x
 * Recommended: 80x24 minimum terminal, fixed-width font
 
 ## credits
