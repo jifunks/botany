@@ -258,6 +258,9 @@ class Plant(object):
         timestamp_diffs = [(j-i)/86400.0 for i, j in zip(all_timestamps[:-1], all_timestamps[1:])]
         # plant's latest timestamp should be set to last timestamp before a
         # gap of 5 days
+        # TODO: this considers a plant watered only on day 1 and day 4 to be
+        # watered for all 4 days - need to figure out how to only add score
+        # from 24h after each watered timestamp
         last_valid_element = next((x for x in timestamp_diffs if x > 5), None)
         if not last_valid_element:
             # all timestamps are within a 5 day range, can just use latest one
