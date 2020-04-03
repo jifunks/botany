@@ -1,6 +1,5 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
-from __future__ import division
 import time
 import pickle
 import json
@@ -249,7 +248,7 @@ class Plant(object):
         else:
             with open(visitor_filepath, mode='w') as f:
                 json.dump([], f)
-            os.chmod(visitor_filepath, 0666)
+            os.chmod(visitor_filepath, 0o666)
         if not guest_timestamps:
             return self.watered_timestamp
         all_timestamps = [self.watered_timestamp] + guest_timestamps
@@ -473,7 +472,7 @@ class DataManager(object):
         sqlite_dir_path = os.path.join(self.game_dir,'sqlite')
         if not os.path.exists(sqlite_dir_path):
             os.makedirs(sqlite_dir_path)
-            os.chmod(sqlite_dir_path, 0777)
+            os.chmod(sqlite_dir_path, 0o777)
         conn = sqlite3.connect(self.garden_db_path)
         init_table_string = """CREATE TABLE IF NOT EXISTS garden (
         plant_id tinytext PRIMARY KEY,
@@ -490,9 +489,9 @@ class DataManager(object):
 
         # init only, creates and sets permissions for garden db and json
         if os.stat(self.garden_db_path).st_uid == os.getuid():
-            os.chmod(self.garden_db_path, 0666)
+            os.chmod(self.garden_db_path, 0o666)
             open(self.garden_json_path, 'a').close()
-            os.chmod(self.garden_json_path, 0666)
+            os.chmod(self.garden_json_path, 0o666)
 
     def migrate_database(self):
         conn = sqlite3.connect(self.garden_db_path)
