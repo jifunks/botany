@@ -1,5 +1,5 @@
 # botany
-[![Screencap](https://asciinema.org/a/bbsqp00meurz3v5ltzc2jywif.png)](https://asciinema.org/a/bbsqp00meurz3v5ltzc2jywif)
+[Screencap](https://tilde.town/~curiouser/botany.png)
 
 by Jake Funke - jifunks@gmail.com - tilde.town/~curiouser - http://jakefunke.online/
 
