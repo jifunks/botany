@@ -581,6 +581,7 @@ class CursedMenu(object):
                                 "growing. 5 days without water = death. your\n"
                                 "plant depends on you & your friends to live!\n"
                                 "more info is available in the readme :)\n"
+                                "https://github.com/jifunks/botany/blob/master/README.md\n"
                                 "                               cheers,\n"
                                 "                               curio\n"
                                 )
