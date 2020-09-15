@@ -756,10 +756,12 @@ class CursedMenu(object):
                 self.screen.addstr(16, 2, "{}'s garden is locked, but you can see in...".format(guest_garden))
         else:
             self.screen.addstr(16, 2, "i can't seem to find directions to {}...".format(guest_garden))
-        self.screen.getch()
-        self.clear_info_pane()
-        self.draw_plant_ascii(self.plant)
-        self.visited_plant = None
+        try:
+            self.screen.getch()
+            self.clear_info_pane()
+            self.draw_plant_ascii(self.plant)
+        finally:
+            self.visited_plant = None
 
     def water_on_visit(self, guest_visitor_file):
         visitor_data = {}
