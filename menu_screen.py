@@ -89,7 +89,7 @@ class CursedMenu(object):
 
     def set_options(self, options):
         # Validates that the last option is "exit"
-        if options[-1] is not 'exit':
+        if options[-1] != 'exit':
             options.append('exit')
         self.options = options
 
@@ -114,7 +114,7 @@ class CursedMenu(object):
         # Actually draws the menu and handles branching
         request = ""
         try:
-            while request is not "exit":
+            while request != "exit":
                 self.draw()
                 request = self.get_user_input()
                 self.handle_request(request)
