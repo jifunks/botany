@@ -174,10 +174,10 @@ class Plant(object):
         # Generate plant rarity
         CONST_RARITY_MAX = 256.0
         rare_seed = random.randint(1,CONST_RARITY_MAX)
-        common_range =    round((2/3)*CONST_RARITY_MAX)
-        uncommon_range =  round((2/3)*(CONST_RARITY_MAX-common_range))
-        rare_range =      round((2/3)*(CONST_RARITY_MAX-common_range-uncommon_range))
-        legendary_range = round((2/3)*(CONST_RARITY_MAX-common_range-uncommon_range-rare_range))
+        common_range =    round((2.0/3)*CONST_RARITY_MAX)
+        uncommon_range =  round((2.0/3)*(CONST_RARITY_MAX-common_range))
+        rare_range =      round((2.0/3)*(CONST_RARITY_MAX-common_range-uncommon_range))
+        legendary_range = round((2.0/3)*(CONST_RARITY_MAX-common_range-uncommon_range-rare_range))
 
         common_max = common_range
         uncommon_max = common_max + uncommon_range
@@ -238,7 +238,7 @@ class Plant(object):
                             if element['user'] not in visitors_this_check:
                                 visitors_this_check.append(element['user'])
                             # prevent users from manually setting watered_time in the future
-                            if element['timestamp'] <= int(time.time()):
+                            if element['timestamp'] <= int(time.time() and element['timestamp'] >= self.watered_timestamp):
                                 guest_timestamps.append(element['timestamp'])
                         try:
                            self.update_visitor_db(visitors_this_check)
