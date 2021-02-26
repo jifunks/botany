@@ -561,7 +561,7 @@ class DataManager(object):
     def save_plant(self, this_plant):
         # create savefile
         this_plant.last_time = int(time.time())
-        temp_path = self.savefile_path + ".temp"
+        temp_path = self.savefile_path + ".temp" + str(random.randint(0,1000))
         with open(temp_path, 'wb') as f:
             pickle.dump(this_plant, f, protocol=2)
         os.rename(temp_path, self.savefile_path)
