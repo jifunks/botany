@@ -69,3 +69,9 @@ A once-weekly cron on clear_weekly_users.py should be set up to keep weekly visi
 
 ## credits
 * thank you [tilde.town](http://tilde.town/) for inspiration!
+
+## praise for botany
+![Screencap](https://tilde.town/~curiouser/praise1.png)
+![Screencap](https://tilde.town/~curiouser/praise2.png)
+![Screencap](https://tilde.town/~curiouser/praise3.png)
+
