@@ -354,7 +354,7 @@ class Plant(object):
                 # Do something else
                 pass
             # TODO: event check
-            generation_bonus = 0.2 * (self.generation - 1)
+            generation_bonus = round(0.2 * (self.generation - 1), 1)
             adjusted_sleep_time = 1 / (1 + generation_bonus)
             time.sleep(adjusted_sleep_time)
 
@@ -455,7 +455,7 @@ class DataManager(object):
                 self.last_water_gain = time.time()
             else:
                 ticks_to_add = 0
-            this_plant.ticks += ticks_to_add * (0.2 * (this_plant.generation - 1) + 1)
+            this_plant.ticks += ticks_to_add * round(0.2 * (this_plant.generation - 1) + 1, 1)
         return this_plant
 
     def plant_age_convert(self,this_plant):
