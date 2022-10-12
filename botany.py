@@ -237,7 +237,7 @@ class Plant(object):
                         if element['user'] not in visitors_this_check:
                             visitors_this_check.append(element['user'])
                         # prevent users from manually setting watered_time in the future
-                        if element['timestamp'] <= int(time.time() and element['timestamp'] >= self.watered_timestamp):
+                        if element['timestamp'] <= int(time.time()) and element['timestamp'] >= self.watered_timestamp:
                             guest_timestamps.append(element['timestamp'])
                     try:
                        self.update_visitor_db(visitors_this_check)
