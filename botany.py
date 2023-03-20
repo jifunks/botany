@@ -508,8 +508,6 @@ class DataManager(object):
 
     def update_garden_db(self, this_plant):
         # insert or update this plant id's entry in DB
-        # TODO: make sure other instances of user are deleted
-        #   Could create a clean db function
         self.init_database()
         self.migrate_database()
         age_formatted = self.plant_age_convert(this_plant)
@@ -528,6 +526,13 @@ class DataManager(object):
                             psco = str(this_plant.ticks),
                             pdead = int(this_plant.dead))
         c.execute(update_query)
+        # clean other instances of user
+        clean_query = """UPDATE garden set is_dead = 1
+                   where owner = '{pown}'
+                   and plant_id <> '{pid}'
+                   """.format(pown = this_plant.owner,
+                              pid = this_plant.plant_id)
+        c.execute(clean_query)
         conn.commit()
         conn.close()
 
