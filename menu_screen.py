@@ -633,7 +633,7 @@ class CursedMenu(object):
         if user_in == -1: # Input comes from pipe/file and is closed
             raise IOError
 
-        if user_in in [ord('Y'), ord('y')]:
+        if user_in in [ord('Y'), ord('y'), 10]:
             self.plant.start_over()
         else:
             pass
