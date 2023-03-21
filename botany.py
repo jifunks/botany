@@ -238,7 +238,7 @@ class Plant(object):
                             if element['user'] not in visitors_this_check:
                                 visitors_this_check.append(element['user'])
                             # prevent users from manually setting watered_time in the future
-                            if element['timestamp'] <= int(time.time() and element['timestamp'] >= self.watered_timestamp):
+                            if element['timestamp'] <= int(time.time()) and element['timestamp'] >= self.watered_timestamp:
                                 guest_timestamps.append(element['timestamp'])
                         try:
                            self.update_visitor_db(visitors_this_check)
@@ -358,7 +358,7 @@ class Plant(object):
                 # Do something else
                 pass
             # TODO: event check
-            generation_bonus = 0.2 * (self.generation - 1)
+            generation_bonus = round(0.2 * (self.generation - 1), 1)
             adjusted_sleep_time = 1 / (1 + generation_bonus)
             time.sleep(adjusted_sleep_time)
 
@@ -459,7 +459,7 @@ class DataManager(object):
                 self.last_water_gain = time.time()
             else:
                 ticks_to_add = 0
-            this_plant.ticks += ticks_to_add * (0.2 * (this_plant.generation - 1) + 1)
+            this_plant.ticks += ticks_to_add * round(0.2 * (this_plant.generation - 1) + 1, 1)
         return this_plant
 
     def plant_age_convert(self,this_plant):
@@ -512,8 +512,6 @@ class DataManager(object):
 
     def update_garden_db(self, this_plant):
         # insert or update this plant id's entry in DB
-        # TODO: make sure other instances of user are deleted
-        #   Could create a clean db function
         self.init_database()
         self.migrate_database()
         age_formatted = self.plant_age_convert(this_plant)
@@ -532,6 +530,13 @@ class DataManager(object):
                             psco = str(this_plant.ticks),
                             pdead = int(this_plant.dead))
         c.execute(update_query)
+        # clean other instances of user
+        clean_query = """UPDATE garden set is_dead = 1
+                   where owner = '{pown}'
+                   and plant_id <> '{pid}'
+                   """.format(pown = this_plant.owner,
+                              pid = this_plant.plant_id)
+        c.execute(clean_query)
         conn.commit()
         conn.close()
 
