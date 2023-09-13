@@ -393,7 +393,7 @@ class DataManager(object):
 
     def check_plant(self):
         # check for existing save file
-        if os.path.isfile(self.savefile_path):
+        if os.path.isfile(self.savefile_path) and os.path.getsize(self.savefile_path) > 0:
             return True
         else:
             return False
