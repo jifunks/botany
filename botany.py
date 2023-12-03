@@ -10,7 +10,7 @@ import threading
 import errno
 import uuid
 import sqlite3
-from menu_screen import *
+import menu_screen as ms
 
 # TODO:
 # - Switch from personal data file to table in DB
@@ -646,9 +646,9 @@ if __name__ == '__main__':
     my_plant.start_life()
     my_data.start_threads(my_plant)
     try:
-        botany_menu = CursedMenu(my_plant,my_data)
+        botany_menu = ms.CursedMenu(my_plant,my_data)
         my_data.save_plant(my_plant)
         my_data.data_write_json(my_plant)
         my_data.update_garden_db(my_plant)
     finally:
-        cleanup()
+        ms.cleanup()
