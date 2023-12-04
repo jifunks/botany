@@ -229,20 +229,24 @@ class Plant(object):
         visitors_this_check = []
         if os.path.isfile(visitor_filepath):
             with open(visitor_filepath, 'r') as visitor_file:
-                data = json.load(visitor_file)
-                if data:
-                    for element in data:
-                        if element['user'] not in self.visitors:
-                            self.visitors.append(element['user'])
-                        if element['user'] not in visitors_this_check:
-                            visitors_this_check.append(element['user'])
-                        # prevent users from manually setting watered_time in the future
-                        if element['timestamp'] <= int(time.time()) and element['timestamp'] >= self.watered_timestamp:
-                            guest_timestamps.append(element['timestamp'])
-                    try:
-                       self.update_visitor_db(visitors_this_check)
-                    except:
-                        pass
+                try:
+                    data = json.load(visitor_file)
+                    if data:
+                        for element in data:
+                            if element['user'] not in self.visitors:
+                                self.visitors.append(element['user'])
+                            if element['user'] not in visitors_this_check:
+                                visitors_this_check.append(element['user'])
+                            # prevent users from manually setting watered_time in the future
+                            if element['timestamp'] <= int(time.time()) and element['timestamp'] >= self.watered_timestamp:
+                                guest_timestamps.append(element['timestamp'])
+                        try:
+                           self.update_visitor_db(visitors_this_check)
+                        except:
+                            pass
+                        with open(visitor_filepath, 'w') as visitor_file:
+                            visitor_file.write('[]')
+                except:
                     with open(visitor_filepath, 'w') as visitor_file:
                         visitor_file.write('[]')
         else:
