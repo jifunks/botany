@@ -3,3 +3,4 @@ garden_db.sqlite
 garden_file.dat
 garden_file.json
 sqlite/
+*.swp
