@@ -318,7 +318,7 @@ if __name__ == '__main__':
         my_plant = Plant(my_data.savefile_path)
         my_data.data_write_json(my_plant)
     # my_plant is either a fresh plant or an existing plant at this point
-    my_plant.start_life()
+    my_plant.start_life(my_data)
     my_data.start_threads(my_plant)
 
     try:

@@ -323,13 +323,13 @@ class Plant:
     def unlock_new_creation(self):
         self.write_lock = False
 
-    def start_life(self):
+    def start_life(self, dm):
        # runs life on a thread
-       thread = threading.Thread(target=self.life, args=())
+       thread = threading.Thread(target=self.life, args=(dm,))
        thread.daemon = True
        thread.start()
 
-    def life(self):
+    def life(self, dm):
         # I've created life :)
         generation_bonus = round(0.2 * (self.generation - 1), 1)
         score_inc = 1 * (1 + generation_bonus)
@@ -346,10 +346,10 @@ class Plant:
                 # Do something
                 pass
             if self.dead_check():
-                self.save_plant(this_plant)
-                self.data_write_json(this_plant)
-                self.update_garden_db(this_plant)
-                self.harvest_plant(this_plant)
+                dm.save_plant(this_plant)
+                dm.data_write_json(this_plant)
+                dm.update_garden_db(this_plant)
+                dm.harvest_plant(this_plant)
                 this_plant.unlock_new_creation()
             # TODO: event check
             time.sleep(2)
