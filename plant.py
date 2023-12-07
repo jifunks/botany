@@ -346,10 +346,10 @@ class Plant:
                 # Do something
                 pass
             if self.dead_check():
-                dm.save_plant(this_plant)
-                dm.data_write_json(this_plant)
-                dm.update_garden_db(this_plant)
-                dm.harvest_plant(this_plant)
+                dm.save_plant(self)
+                dm.data_write_json(self)
+                dm.update_garden_db(self)
+                dm.harvest_plant(self)
                 this_plant.unlock_new_creation()
             # TODO: event check
             time.sleep(2)
