@@ -3,6 +3,8 @@ import os
 import json
 import threading
 import time
+import uuid
+import getpass
 
 class Plant:
     # This is your plant!
@@ -187,6 +189,8 @@ class Plant:
         return rarity
 
     def dead_check(self):
+        if self.dead:
+            return True
         # if it has been >5 days since watering, sorry plant is dead :(
         time_delta_watered = int(time.time()) - self.watered_timestamp
         if time_delta_watered > (5 * (24 * 3600)):
@@ -327,10 +331,12 @@ class Plant:
 
     def life(self):
         # I've created life :)
+        generation_bonus = round(0.2 * (self.generation - 1), 1)
+        score_inc = 1 * (1 + generation_bonus)
         while True:
             if not self.dead:
                 if self.watered_24h:
-                    self.ticks += 1
+                    self.ticks += score_inc
                     if self.stage < len(self.stage_list)-1:
                         if self.ticks >= self.life_stages[self.stage]:
                             self.growth()
@@ -340,10 +346,10 @@ class Plant:
                 # Do something
                 pass
             if self.dead_check():
-                # Do something else
-                pass
+                self.save_plant(this_plant)
+                self.data_write_json(this_plant)
+                self.update_garden_db(this_plant)
+                self.harvest_plant(this_plant)
+                this_plant.unlock_new_creation()
             # TODO: event check
-            generation_bonus = round(0.2 * (self.generation - 1), 1)
-            adjusted_sleep_time = 1 / (1 + generation_bonus)
-            time.sleep(adjusted_sleep_time)
-
+            time.sleep(2)

@@ -4,11 +4,9 @@ import time
 import pickle
 import json
 import os
-import random
 import getpass
 import threading
 import errno
-import uuid
 import sqlite3
 import menu_screen as ms
 from plant import Plant
@@ -16,7 +14,9 @@ from plant import Plant
 # TODO:
 # - switch from personal data file to row in DB
 # - is threading necessary?
-# - reduce CPU usage
+# - use a different curses window for plant, menu, info window, score
+
+# notes from vilmibm
 
 # there are threads.
 # - life thread. sleeps a variable amount of time based on generation bonus. increases tick count (ticks == score).
@@ -40,7 +40,6 @@ from plant import Plant
 #  prints some explanatory text below the UI
 # - exit
 #  quits program
-
 
 # part of the complexity of all this is everything takes place in one curses window; thus, updates must be manually synchronized across the various logical parts of the screen.
 # ideally, multiple windows would be used:
@@ -91,24 +90,9 @@ class DataManager(object):
 
     def start_threads(self,this_plant):
         # creates threads to save files every minute
-        death_check_thread = threading.Thread(target=self.death_check_update, args=(this_plant,))
-        death_check_thread.daemon = True
-        death_check_thread.start()
         autosave_thread = threading.Thread(target=self.autosave, args=(this_plant,))
         autosave_thread.daemon = True
         autosave_thread.start()
-
-    def death_check_update(self,this_plant):
-        # .1 second updates and lock to minimize race condition
-        while True:
-            is_dead = this_plant.dead_check()
-            if is_dead:
-                self.save_plant(this_plant)
-                self.data_write_json(this_plant)
-                self.update_garden_db(this_plant)
-                self.harvest_plant(this_plant)
-                this_plant.unlock_new_creation()
-            time.sleep(.1)
 
     def autosave(self, this_plant):
         # running on thread, saves plant every 5s TODO: this is unnecessary
