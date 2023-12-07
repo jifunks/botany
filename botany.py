@@ -20,8 +20,6 @@ from plant import Plant
 
 # there are threads.
 # - life thread. sleeps a variable amount of time based on generation bonus. increases tick count (ticks == score).
-# - death check; sleeps .1 per loop. checks if plant is dead and harvests it if so.
-# - autosave: saves plant file every 5 seconds. every 60 seconds, updates the garden db
 # - screen: sleeps 1s per loop. draws interface (including plant). for seeing score/plant change without user input.
 # meanwhile, the main thread handles input and redraws curses as needed.
 
@@ -87,27 +85,6 @@ class DataManager(object):
             return True
         else:
             return False
-
-    def start_threads(self,this_plant):
-        # creates threads to save files every minute
-        autosave_thread = threading.Thread(target=self.autosave, args=(this_plant,))
-        autosave_thread.daemon = True
-        autosave_thread.start()
-
-    def autosave(self, this_plant):
-        # running on thread, saves plant every 5s TODO: this is unnecessary
-        # and breaks shit probably
-        file_update_count = 0
-        while True:
-            file_update_count += 1
-            self.save_plant(this_plant)
-            self.data_write_json(this_plant)
-            self.update_garden_db(this_plant)
-            if file_update_count == 12:
-                # only update garden json every 60s
-                self.update_garden_json()
-            time.sleep(5)
-            file_update_count %= 12
 
     def load_plant(self):
         # load savefile
@@ -319,7 +296,6 @@ if __name__ == '__main__':
         my_data.data_write_json(my_plant)
     # my_plant is either a fresh plant or an existing plant at this point
     my_plant.start_life(my_data)
-    my_data.start_threads(my_plant)
 
     try:
         botany_menu = ms.CursedMenu(my_plant,my_data)

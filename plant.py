@@ -331,9 +331,11 @@ class Plant:
 
     def life(self, dm):
         # I've created life :)
+        counter = 0
         generation_bonus = round(0.2 * (self.generation - 1), 1)
         score_inc = 1 * (1 + generation_bonus)
         while True:
+            counter += 1
             if not self.dead:
                 if self.watered_24h:
                     self.ticks += score_inc
@@ -342,14 +344,23 @@ class Plant:
                             self.growth()
                     if self.mutate_check():
                         pass
+
             if self.water_check():
                 # Do something
                 pass
+
             if self.dead_check():
+                dm.harvest_plant(self)
+                self.unlock_new_creation()
+
+            if counter % 3 == 0:
                 dm.save_plant(self)
                 dm.data_write_json(self)
                 dm.update_garden_db(self)
-                dm.harvest_plant(self)
-                self.unlock_new_creation()
+
+            if counter % 30 == 0:
+                self.update_garden_json()
+                counter = 0
+
             # TODO: event check
             time.sleep(2)
