@@ -350,6 +350,6 @@ class Plant:
                 dm.data_write_json(self)
                 dm.update_garden_db(self)
                 dm.harvest_plant(self)
-                this_plant.unlock_new_creation()
+                self.unlock_new_creation()
             # TODO: event check
             time.sleep(2)
