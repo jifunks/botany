@@ -311,6 +311,7 @@ class Plant:
         self.write_lock = True
         self.kill_plant()
         while self.write_lock:
+            # TODO is this the culprit for the intermittent full-runaway botany?
             # Wait for garden writer to unlock
             # garden db needs to update before allowing the user to reset
             pass

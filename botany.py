@@ -46,6 +46,46 @@ from plant import Plant
 # - the status display: score and plant description
 # - the infow window. updated by visit/garden/instructions/look
 
+# thoughts on storage
+
+# Right now, plants are stored in a few ways:
+# - as a row in the garden db for displaying when users choose to view a garden. this can be thought of as a cache over the plant files in individual user's home .botany dirs. this is a sqlite3 file kept in the source directory for botany's code.
+# - as a json file local to ~/.botany; this is, afaict, for people to use as a kind of API?
+# - as a .dat file--a pickled representation of that plant--in ~/.botany. this is the actual savefile for a plant.
+#
+# the fundmental pieces of data for a plant are:
+# - birth timestamp
+# - last water timestamp
+# - generation
+# - mutation
+#
+# everything else is either flavor (art, adjectives, rarity) or can be derived
+# (alive/dead, stage, growth rate, water level)
+#
+# the visitor system allows for other people to touch the last water timestamp
+# which is an interesting permissions problem.
+#
+# it's tempting to re-imagine all of this as something centralized: a shared
+# sqlite3 db tracks 100% of information on all plants and on visitation. This
+# would simplify a lot about botany. I think there is something romantic about
+# having a garden/plant file in one's home directory. This also reduces the
+# likelihood of a centralized error wiping out plant data.
+#
+# So can a new botany be designed that
+# - keeps plant files distributed
+# - allows for visitation
+# - can render an overview of a system's garden
+# - can handle changes to a plant when botany isn't itself running
+# - can handle changes to a plant from out-of-band (eg visitor) when botany is running
+#
+# that minimizes the chances for race conditions and reduces the redundancy of
+# plant serialization?
+#
+# reduce down to a single game loop
+# start by filling up .botany (json or sqlite3?) and consider garden generalization as an out of band task.
+# create a world-writable sqlite3 db for visitors to write to
+
+
 class DataManager(object):
     # handles user data, puts a .botany dir in user's home dir (OSX/Linux)
     # handles shared data with sqlite db
