@@ -60,7 +60,6 @@ def mkdb(p: str, sql: str) -> Optional[Exception]:
         return Exception(f"failed to initialize {p}: {e}")
     return None
     
-
 def setup() -> Optional[Exception]:
     bdir = path.expanduser(path.join("~", BOTANY_DIR))
     e = mkdir(bdir)
@@ -72,14 +71,11 @@ def setup() -> Optional[Exception]:
     if e is not None:
         return e
 
-    plotdb_path = path.join(bdir, "db/plot.db")
-    # TODO test manually to see what kind of permissions fuckery we need
-    e = mkdb(plotdb_path, PLOT_SCHEMA)
+    e = mkdb(path.join(bdir, "db/plot.db"), PLOT_SCHEMA)
     if e is not None:
         return e
 
-    visitordb_path = path.join(bdir, "db/visitors.db")
-    e = mkdb(visitordb_path, VISITORS_SCHEMA)
+    e = mkdb(path.join(bdir, "db/visitors.db"), VISITORS_SCHEMA)
     if e is not None:
         return e
     
