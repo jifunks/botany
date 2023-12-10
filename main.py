@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import curses
 import datetime
 from os import path
 from getpass import getuser
@@ -9,6 +10,7 @@ import sys
 from typing import Optional, Tuple, TypeVar
 
 BOTANY_DIR = ".botany"
+MIN_SCREEN_WIDTH = 80
 
 dt = datetime.datetime
 
@@ -88,13 +90,29 @@ def main() -> Optional[Exception]:
     if e is not None:
         return e
 
-    # TODO restore plant from disk
+    # TODO rug sweep curses stuff
+    parentwin = curses.initscr()
+    parentwin.keypad(True)
+    curses.noecho()
+    curses.raw()
+    if curses.has_colors():
+        curses.start_color()
+    try:
+        curses.curs_set(0)
+    except curses.error:
+        # Not all terminals support this functionality.
+        # When the error is ignored the screen will be slightly uglier but functional
+        # so we ignore this error for terminal compatibility.
+        pass
+    if curses.COLS < MIN_SCREEN_WIDTH:
+        return Exception("the terminal window is too narrow")
+    
     return None
 
 if __name__ == "__main__":
     ret = 0
     e = main()
     if e is not None:
-        print(e)
+        print(e, file=sys.stderr)
         ret = 1
     sys.exit(ret)
