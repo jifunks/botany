@@ -359,7 +359,7 @@ class Plant:
                 dm.update_garden_db(self)
 
             if counter % 30 == 0:
-                self.update_garden_json()
+                dm.update_garden_json()
                 counter = 0
 
             # TODO: event check
