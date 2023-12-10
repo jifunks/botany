@@ -7,10 +7,13 @@ import os
 from datetime import timezone
 import sqlite3
 import sys
+from time import sleep
 from typing import Optional, Tuple, TypeVar
 
 BOTANY_DIR = ".botany"
-MIN_SCREEN_WIDTH = 80
+MIN_SCREEN_WIDTH = 70
+MIN_SCREEN_HEIGHT = 20
+INTERVAL = 1
 
 dt = datetime.datetime
 
@@ -38,7 +41,7 @@ CREATE TABLE IF NOT EXISTS visitors (
     -- Each row is a visit from another user
     id   INTEGER PRIMARY KEY,
     name TEXT,
-    when TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M', 'now', 'localtime')),
+    at   TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M', 'now', 'localtime'))
 )
 """
 
@@ -106,7 +109,28 @@ def main() -> Optional[Exception]:
         pass
     if curses.COLS < MIN_SCREEN_WIDTH:
         return Exception("the terminal window is too narrow")
+    if curses.LINES < MIN_SCREEN_HEIGHT:
+        return Exception("the terminal window is too short")
+
+    menuwin = curses.newwin(10, 30, 4, 2)
+    plantwin = curses.newwin(30, 40, 4, 31)
+    scorewin = curses.newwin(2, 30, 15, 2)
+    # TODO info area (is this where prompt is rendered?)
+
+    while True:
+        c = parentwin.getch()
+        if c == -1 or c == ord("q") or c == ord("x") or c == 27:
+            break
+        sleep(INTERVAL)
     
+    try:
+        curses.curs_set(2)
+    except curses.error:
+        # cursor not supported; just ignore
+        pass
+    curses.endwin()
+    os.system('clear')
+
     return None
 
 if __name__ == "__main__":
