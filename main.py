@@ -7,6 +7,7 @@ import os
 from datetime import timezone
 import sqlite3
 import sys
+import threading
 from time import sleep
 from typing import Optional, Tuple, TypeVar
 
@@ -86,6 +87,43 @@ def setup() -> Optional[Exception]:
     
     return None
 
+class UI:
+    def __init__(self) -> None:
+        self.quitting = False
+        self.pwin = curses.initscr()
+        self.pwin.keypad(True)
+        curses.noecho()
+        curses.raw()
+        if curses.has_colors():
+            curses.start_color()
+        try:
+            curses.curs_set(0)
+        except curses.error:
+            # Not all terminals support this functionality.
+            # When the error is ignored the screen will be slightly uglier but functional
+            # so we ignore this error for terminal compatibility.
+            pass
+        if curses.COLS < MIN_SCREEN_WIDTH:
+            raise Exception("the terminal window is too narrow")
+        if curses.LINES < MIN_SCREEN_HEIGHT:
+            raise Exception("the terminal window is too short")
+        self.menuwin = curses.newwin(10, 30, 4, 2)
+        self.plantwin = curses.newwin(30, 40, 4, 31)
+        self.scorewin = curses.newwin(2, 30, 15, 2)
+        # TODO info area (is this where prompt is rendered?)
+
+    def quit(self) -> None:
+        self.quitting = True
+
+    def handle_input(self) -> None:
+        while True:
+            c = self.pwin.getch()
+            if c == -1 or c == ord("q") or c == ord("x") or c == 27:
+                self.quit()
+                break
+
+# TODO Plant
+
 def main() -> Optional[Exception]:
     username = getuser()
 
@@ -93,34 +131,22 @@ def main() -> Optional[Exception]:
     if e is not None:
         return e
 
-    # TODO rug sweep curses stuff
-    parentwin = curses.initscr()
-    parentwin.keypad(True)
-    curses.noecho()
-    curses.raw()
-    if curses.has_colors():
-        curses.start_color()
     try:
-        curses.curs_set(0)
-    except curses.error:
-        # Not all terminals support this functionality.
-        # When the error is ignored the screen will be slightly uglier but functional
-        # so we ignore this error for terminal compatibility.
-        pass
-    if curses.COLS < MIN_SCREEN_WIDTH:
-        return Exception("the terminal window is too narrow")
-    if curses.LINES < MIN_SCREEN_HEIGHT:
-        return Exception("the terminal window is too short")
+        ui = UI()
+    except Exception as e:
+        return Exception(f"could not initialize UI: {e}")
 
-    menuwin = curses.newwin(10, 30, 4, 2)
-    plantwin = curses.newwin(30, 40, 4, 31)
-    scorewin = curses.newwin(2, 30, 15, 2)
-    # TODO info area (is this where prompt is rendered?)
+    ithread = threading.Thread(target=ui.handle_input, args=())
+    ithread.start()
 
     while True:
-        c = parentwin.getch()
-        if c == -1 or c == ord("q") or c == ord("x") or c == 27:
+        if ui.quitting:
             break
+
+        # TODO get plant info from db
+        # TODO update in-memory representation of derived characteristics / plant info
+        # TODO redraw plant (if changed)
+        # TODO redraw water gauge
         sleep(INTERVAL)
     
     try:
