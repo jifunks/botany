@@ -134,17 +134,18 @@ class UI:
             if c == -1 or c == ord("q") or c == ord("x") or c == 27:
                 self.quit()
                 break
-            if c == curses.KEY_DOWN:
+            if c == curses.KEY_DOWN or c == ord("j"):
                 self.selected_opt += 1
                 self.selected_opt %= len(self.menu_opts)
                 self.draw_menu()
-            if c == curses.KEY_UP:
+            if c == curses.KEY_UP or c == ord("k"):
                 self.selected_opt -= 1
                 if self.selected_opt < 0:
                     self.selected_opt = 0
                 self.draw_menu()
 
     def draw_menu(self) -> None:
+        # TODO water gauge
         self.menuwin.addstr(1, 2, " botany ", curses.A_STANDOUT)
         self.menuwin.addstr(3, 2, "options", curses.A_BOLD)
         x = 0
@@ -179,8 +180,6 @@ class UI:
 
         self.plantwin.addstr(0,0, plant, curses.A_STANDOUT)
         self.plantwin.refresh()
-
-        # TODO redraw water gauge
 
 # TODO Plant
 
