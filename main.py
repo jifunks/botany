@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import random
 import curses
 import datetime
 from os import path
@@ -90,7 +91,22 @@ def setup() -> Optional[Exception]:
 class UI:
     def __init__(self) -> None:
         self.quitting = False
-        self.pwin = curses.initscr()
+        self.pwin     = curses.initscr()
+        self.menuwin  = curses.newwin(10, 30, 0, 0)
+        self.plantwin = curses.newwin(30, 40, 0, 31)
+        self.scorewin = curses.newwin(2, 30, 15, 2)
+        # TODO info area (is this where prompt is rendered?)
+
+        self.menu_opts = [
+                "water",
+                "look",
+                "garden",
+                "visit",
+                "instructions",
+                "quit"]
+
+        self.selected_opt = 0
+
         self.pwin.keypad(True)
         curses.noecho()
         curses.raw()
@@ -103,14 +119,11 @@ class UI:
             # When the error is ignored the screen will be slightly uglier but functional
             # so we ignore this error for terminal compatibility.
             pass
+
         if curses.COLS < MIN_SCREEN_WIDTH:
             raise Exception("the terminal window is too narrow")
         if curses.LINES < MIN_SCREEN_HEIGHT:
             raise Exception("the terminal window is too short")
-        self.menuwin = curses.newwin(10, 30, 4, 2)
-        self.plantwin = curses.newwin(30, 40, 4, 31)
-        self.scorewin = curses.newwin(2, 30, 15, 2)
-        # TODO info area (is this where prompt is rendered?)
 
     def quit(self) -> None:
         self.quitting = True
@@ -121,6 +134,53 @@ class UI:
             if c == -1 or c == ord("q") or c == ord("x") or c == 27:
                 self.quit()
                 break
+            if c == curses.KEY_DOWN:
+                self.selected_opt += 1
+                self.selected_opt %= len(self.menu_opts)
+                self.draw_menu()
+            if c == curses.KEY_UP:
+                self.selected_opt -= 1
+                if self.selected_opt < 0:
+                    self.selected_opt = 0
+                self.draw_menu()
+
+    def draw_menu(self) -> None:
+        self.menuwin.addstr(1, 2, " botany ", curses.A_STANDOUT)
+        self.menuwin.addstr(3, 2, "options", curses.A_BOLD)
+        x = 0
+        for o in self.menu_opts:
+            style = curses.A_NORMAL
+
+            if x == self.selected_opt:
+                style = curses.A_STANDOUT
+
+            self.menuwin.addstr(4 + x, 4, f"{x+1} - {o}", style)
+
+            x += 1
+        self.menuwin.refresh()
+
+    def draw(self) -> None:
+        self.draw_menu()
+        # TODO draw score
+        # TODO info window
+        # Draw plant
+        # TODO actually do
+        # TODO make conditional on plant ascii actually changing
+        lol = "TODO plant ascii"
+        plant = ""
+        x = 0
+        while x < len(lol):
+            flip = random.randint(0, 1)
+            if flip == 0:
+                plant += lol[x]
+            else:
+                plant += lol[x].upper()
+            x += 1
+
+        self.plantwin.addstr(0,0, plant, curses.A_STANDOUT)
+        self.plantwin.refresh()
+
+        # TODO redraw water gauge
 
 # TODO Plant
 
@@ -145,8 +205,7 @@ def main() -> Optional[Exception]:
 
         # TODO get plant info from db
         # TODO update in-memory representation of derived characteristics / plant info
-        # TODO redraw plant (if changed)
-        # TODO redraw water gauge
+        ui.draw()
         sleep(INTERVAL)
     
     try:
