@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from enum import StrEnum
 import random
 import curses
 import datetime
@@ -34,6 +35,7 @@ CREATE TABLE IF NOT EXISTS plot (
     created    TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M', 'now', 'localtime')),
     watered    TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M', 'now', 'localtime')),
     generation INTEGER,
+    dead       INTEGER,
     flavor     JSON
 )
 """
@@ -66,9 +68,14 @@ def mkdb(p: str, sql: str) -> Optional[Exception]:
     except Exception as e:
         return Exception(f"failed to initialize {p}: {e}")
     return None
+
+def conndb(p: str) -> Tuple[Optional[sqlite3.Connection], Optional[Exception]]:
+    try:
+        return sqlite3.connect(p), None
+    except Exception as e:
+        return None, Exception(f"could not connect to {p}: {e}")
     
-def setup() -> Optional[Exception]:
-    bdir = path.expanduser(path.join("~", BOTANY_DIR))
+def setup(bdir: str, plotdb_path: str, visitordb_path: str) -> Optional[Exception]:
     e = mkdir(bdir)
     if e is not None:
         return e
@@ -78,11 +85,11 @@ def setup() -> Optional[Exception]:
     if e is not None:
         return e
 
-    e = mkdb(path.join(bdir, "db/plot.db"), PLOT_SCHEMA)
+    e = mkdb(plotdb_path, PLOT_SCHEMA)
     if e is not None:
         return e
 
-    e = mkdb(path.join(bdir, "db/visitors.db"), VISITORS_SCHEMA)
+    e = mkdb(visitordb_path, VISITORS_SCHEMA)
     if e is not None:
         return e
     
@@ -181,14 +188,185 @@ class UI:
         self.plantwin.addstr(0,0, plant, curses.A_STANDOUT)
         self.plantwin.refresh()
 
-# TODO Plant
+class PlantStage(StrEnum):
+    SEED = "seed"
+    SEEDLING = "seedling"
+    YOUNG = "young"
+    MATURE = "mature"
+    FLOWERING = "flowering"
+    SEEDBEARING = "seed-bearing"
+
+class PlantColor(StrEnum):
+    RED = "red"
+    ORANGE = "orange"
+    YELLOW = "yellow"
+    GREEN = "green"
+    BLUE = "blue"
+    INDIGO = "indigo"
+    VIOLET = "violet"
+    WHITE = "white"
+    BLACK = "black"
+    GOLD = "gold"
+    RAINBOW = "rainbow"
+
+class PlantRarity(StrEnum):
+    COMMON = "common"
+    UNCOMMON = "uncommon"
+    RARE = "rare"
+    LEGENDARY = "legendary"
+    GODLY = "godly"
+
+class PlantSpecies(StrEnum):
+    POPPY = "poppy"
+    CACTUS = "cactus"
+    ALOE = "aloe"
+    FLYTRAP = "venus flytrap"
+    JADE = "jade plant"
+    FERN = "fern"
+    DAFFODIL = "daffodil"
+    SUNFLOWER = "sunflower"
+    BAOBAB = "baobab"
+    LITHOPS = "lithops"
+    HEMP = "hemp"
+    PANSY = "pansy"
+    IRIS = "iris"
+    AGAVE = "agave"
+    FICUS = "ficus",
+    MOSS = "moss",
+    SAGE = "sage",
+    SNAPDRAGON = "snapdragon"
+    COLUMBINE = "columbine"
+    BRUGMANSIA = "brugmansia"
+    PALM = "palm"
+    PACHYPODIUM = "pachypodium"
+
+class PlantMutation(StrEnum):
+    HUMMING = 'humming',
+    NOXIOUS = 'noxious',
+    VORPAL = 'vorpal',
+    GLOWING = 'glowing',
+    ELECTRIC = 'electric',
+    ICY = 'icy',
+    FLAMING = 'flaming',
+    PSYCHIC = 'psychic',
+    SCREAMING = 'screaming',
+    CHAOTIC = 'chaotic',
+    HISSING = 'hissing',
+    GELATINOUS = 'gelatinous',
+    DEFORMED = 'deformed',
+    SHAGGY = 'shaggy',
+    SCALY = 'scaly',
+    DEPRESSED = 'depressed',
+    ANXIOUS = 'anxious',
+    METALLIC = 'metallic',
+    GLOSSY = 'glossy',
+    PSYCHEDELIC = 'psychedelic',
+    BONSAI = 'bonsai',
+    FOAMY = 'foamy',
+    SINGING = 'singing',
+    FRACTAL = 'fractal',
+    CRUNCHY = 'crunchy',
+    GOTH = 'goth',
+    OOZING = 'oozing',
+    STINKY = 'stinky',
+    AROMATIC = 'aromatic',
+    JUICY = 'juicy',
+    SMUG = 'smug',
+    VIBRATING = 'vibrating',
+    LITHE = 'lithe',
+    CHALKY = 'chalky',
+    NAIVE = 'naive',
+    ERSATZ = 'ersatz',
+    DISCO = 'disco',
+    LEVITATING = 'levitating',
+    COLOSSAL = 'colossal',
+    LUMINOUS = 'luminous',
+    COSMIC = 'cosmic',
+    ETHEREAL = 'ethereal',
+    CURSED = 'cursed',
+    BUFF = 'buff',
+    NARCOTIC = 'narcotic',
+    GNULINUX = 'gnu/linux',
+    ABRAXAN = 'abraxan', # rip dear friend
+
+@dataclass
+class Plant:
+    created: dt
+    watered: dt
+    color: PlantColor
+    rarity: PlantRarity
+    species: PlantSpecies
+    mutation: PlantMutation
+    generation: int
+
+    @property
+    def stage(self) -> PlantStage:
+        # TODO calculate based on aged
+        return PlantStage.SEED
+
+    @property
+    def score(self) -> int:
+        # TODO calculate based on things
+        return 0
+
+    @property
+    def dead(self) -> bool:
+        # TODO calculate based on watered
+        return False
+
+def mkplant() -> Plant:
+    # TODO randomize properties as needed
+    return Plant()
+
+def get_or_create_plant(conn: sqlite3.Connection) -> Tuple[Plant, Optional[Exception]]:
+    p = Plant()
+    err = None
+    try:
+        c = conn.cursor()
+        sql = "SELECT created, watered, generation, dead, flavor FROM plot WHERE dead = 0"
+        rows = cur.execute(sql).fetchall()
+        if len(rows) > 1:
+            return p, Exception("that's my purse. i don't know you")
+        if len(rows) == 0:
+            p = mkplant()
+            sql = """
+                INSERT INTO plot (watered, generation, dead, flavor) VALUES (
+                    ?, 1, 0, ?
+                )
+            """
+
+
+    except Exception as e:
+        err = e
+    finally:
+        c.close()
+
+    return p, err
+
 
 def main() -> Optional[Exception]:
-    username = getuser()
+    username = getuser() # TODO unused
 
-    e = setup()
+    bdir = path.expanduser(path.join("~", BOTANY_DIR))
+    plotdb_path = path.join(bdir, "db/plot.db")
+    visitordb_path = path.join(bdir, "db/visitors.db")
+
+    e = setup(bdir, plotdb_path, visitordb_path)
     if e is not None:
         return e
+
+    # time to think about db connections. I don't think there is much harm in
+    # keeping them open, so let's open them.
+
+    plotdb, e = conndb(plotdb_path)
+    if e is not None:
+        return e
+
+    plant, e = get_or_create_plant(plotdb)
+    if e is not None:
+        return Exception(f"could not find or make a plant: {e}")
+    # If the latest plant is dead, the user can choose to create a new plant with harvest option.
+    # TODO
 
     try:
         ui = UI()
