@@ -164,7 +164,7 @@ class Plant:
     def rarity_check(self):
         # Generate plant rarity
         CONST_RARITY_MAX = 256.0
-        rare_seed = random.randint(1,CONST_RARITY_MAX)
+        rare_seed = random.randint(1,int(CONST_RARITY_MAX))
         common_range =    round((2.0/3)*CONST_RARITY_MAX)
         uncommon_range =  round((2.0/3)*(CONST_RARITY_MAX-common_range))
         rare_range =      round((2.0/3)*(CONST_RARITY_MAX-common_range-uncommon_range))
