@@ -623,7 +623,7 @@ class CursedMenu(object):
         if not self.plant.dead:
             if self.plant.stage == max_stage:
                 harvest_text += "Congratulations! You raised your plant to its final stage of growth.\n"
-                harvest_text += "Your next plant will grow at a speed of: {}x\n".format(1 + (0.2 * self.plant.generation))
+                harvest_text += "Your next plant will grow at a speed of: {:.1f}x\n".format(1 + (0.2 * self.plant.generation))
         harvest_text += "If you harvest your plant you'll start over from a seed.\nContinue? (Y/n)"
         self.draw_info_text(harvest_text)
         try:
