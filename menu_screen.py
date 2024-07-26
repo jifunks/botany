@@ -29,7 +29,7 @@ class CursedMenu(object):
         except curses.error:
             # Not all terminals support this functionality.
             # When the error is ignored the screen will look a little uglier, but that's not terrible
-            # So in order to keep botany as accesible as possible to everyone, it should be safe to ignore the error.
+            # So in order to keep botany as accessible as possible to everyone, it should be safe to ignore the error.
             pass
         self.screen.keypad(1)
         self.plant = this_plant
@@ -51,7 +51,7 @@ class CursedMenu(object):
         screen_thread = threading.Thread(target=self.update_plant_live, args=())
         screen_thread.daemon = True
         screen_thread.start()
-        # Recusive lock to prevent both threads from drawing at the same time
+        # Recursive lock to prevent both threads from drawing at the same time
         self.screen_lock = threading.RLock()
         self.screen.clear()
         self.show(["water","look","garden","visit", "instructions"], title=' botany ', subtitle='options')
