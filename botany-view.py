@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+
+import datetime
+
 from botany import *
 
 def ascii_render(filename):
@@ -9,7 +12,7 @@ def ascii_render(filename):
     this_string = this_file.read()
     this_file.close()
     print(this_string)
- 
+
 def draw_plant_ascii(this_plant):
     # this list should be somewhere where it could have been inherited, instead
     # of hardcoded in more than one place...
