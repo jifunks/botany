@@ -75,3 +75,8 @@ A once-weekly cron on clear_weekly_users.py should be set up to keep weekly visi
 ![Screencap](https://tilde.town/~curiouser/praise2.png)
 ![Screencap](https://tilde.town/~curiouser/praise3.png)
 
+## Featured in Linux Magazine!
+![IMG_7497](https://github.com/user-attachments/assets/5b778452-6cd1-489d-aeba-082f31538eb7)
+(via Graham Morrison "FOSSPicks" *Linux Magazine*, Issue 273, 2023
+
+
