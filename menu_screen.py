@@ -57,7 +57,6 @@ class CursedMenu(object):
         self.show(["water","look","garden","visit", "instructions"], title=' botany ', subtitle='options')
 
     def define_colors(self):
-        # TODO: implement colors
         # set curses color pairs manually
         curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
         curses.init_pair(2, curses.COLOR_WHITE, curses.COLOR_BLACK)
@@ -67,6 +66,21 @@ class CursedMenu(object):
         curses.init_pair(6, curses.COLOR_YELLOW, curses.COLOR_BLACK)
         curses.init_pair(7, curses.COLOR_RED, curses.COLOR_BLACK)
         curses.init_pair(8, curses.COLOR_CYAN, curses.COLOR_BLACK)
+
+    ESC_CODE_TO_PAIR = {
+            ''  : 0, # normal
+            '0'  : 0, # normal
+            '30' : 1, # black
+            '31' : 7, # red
+            '32' : 3, # green
+            '33' : 6, # yellow
+            '34' : 4, # blue
+            '35' : 5, # magenta
+            '36' : 8, # cyan
+            '37' : 2  # white
+    }
+    def esc_code_to_color(self, esc_code):
+        return curses.color_pair(self.ESC_CODE_TO_PAIR.get(esc_code, 0))
 
     def show(self, options, title, subtitle):
         # Draws a menu with parameters
@@ -135,7 +149,7 @@ class CursedMenu(object):
     def ascii_render(self, filename, ypos, xpos):
         # Prints ASCII art from file at given coordinates
         this_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),"art")
-        this_filename = os.path.join(this_dir,filename)
+        this_filename = os.path.join(this_dir,filename + '.txt')
         this_file = open(this_filename,"r")
         this_string = this_file.readlines()
         this_file.close()
@@ -144,6 +158,41 @@ class CursedMenu(object):
             self.screen.addstr(ypos+y, xpos, line, curses.A_NORMAL)
         # self.screen.refresh()
         self.screen_lock.release()
+
+    def ansi_render(self, filename, ypos, xpos):
+        # Prints ANSI art from file at given coordinates
+        # Falls back on ASCII if no ANSI version exists
+        # Assumes curses.has_colors()
+        this_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),"art")
+        this_filename = os.path.join(this_dir,filename + '.ansi')
+        if not os.path.exists(this_filename):
+            self.ascii_render(filename, ypos, xpos)
+            return
+        this_file = open(this_filename,"r")
+        this_string = this_file.readlines()
+        this_file.close()
+        self.screen_lock.acquire()
+        color = curses.A_NORMAL
+        for y, line in enumerate(this_string, 2):
+            code_text_pairs = [tuple(token.split('m', 1)) if 'm' in token else (None, token)
+                    for token in line.rstrip('\r\n').split('\x1b[') ]
+            color_text_pairs = [(color, text) if code == None else (self.esc_code_to_color(code), text)
+                    for (code, text) in code_text_pairs]
+            x = 0
+            for (color, text) in color_text_pairs:
+                # Handle overflowing art gracefully
+                text = text[:max(0, self.maxx-(xpos+x))]
+                if not text:
+                    continue
+                self.screen.addstr(ypos+y, xpos+x, text, color)
+                x += len(text)
+        self.screen_lock.release()
+
+    def art_render(self, filename, ypos, xpos):
+        if curses.has_colors():
+            self.ansi_render(filename, ypos, xpos)
+        else:
+            self.ascii_render(filename, ypos, xpos)
 
     def draw_plant_ascii(self, this_plant):
         ypos = 0
@@ -173,22 +222,22 @@ class CursedMenu(object):
             'pachypodium',
         ]
         if this_plant.dead == True:
-            self.ascii_render('rip.txt', ypos, xpos)
+            self.art_render('rip', ypos, xpos)
         elif datetime.date.today().month == 10 and datetime.date.today().day == 31:
-            self.ascii_render('jackolantern.txt', ypos, xpos)
+            self.art_render('jackolantern', ypos, xpos)
         elif this_plant.stage == 0:
-            self.ascii_render('seed.txt', ypos, xpos)
+            self.art_render('seed', ypos, xpos)
         elif this_plant.stage == 1:
-            self.ascii_render('seedling.txt', ypos, xpos)
+            self.art_render('seedling', ypos, xpos)
         elif this_plant.stage == 2:
-            this_filename = plant_art_list[this_plant.species]+'1.txt'
-            self.ascii_render(this_filename, ypos, xpos)
+            this_filename = plant_art_list[this_plant.species]+'1'
+            self.art_render(this_filename, ypos, xpos)
         elif this_plant.stage == 3 or this_plant.stage == 5:
-            this_filename = plant_art_list[this_plant.species]+'2.txt'
-            self.ascii_render(this_filename, ypos, xpos)
+            this_filename = plant_art_list[this_plant.species]+'2'
+            self.art_render(this_filename, ypos, xpos)
         elif this_plant.stage == 4:
-            this_filename = plant_art_list[this_plant.species]+'3.txt'
-            self.ascii_render(this_filename, ypos, xpos)
+            this_filename = plant_art_list[this_plant.species]+'3'
+            self.art_render(this_filename, ypos, xpos)
 
     def draw_default(self):
         # draws default menu
