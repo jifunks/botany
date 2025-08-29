@@ -1,52 +1,14 @@
-#!/usr/bin/env python3
-
 import time
 import pickle
 import json
 import os
 import getpass
-import threading
 import errno
 import sqlite3
-import menu_screen as ms
-from plant import Plant
 
-# TODO:
-# - switch from personal data file to row in DB
-# - is threading necessary?
-# - use a different curses window for plant, menu, info window, score
+GAME_DIR = "/usr/share/botany"
 
-# notes from vilmibm
-
-# there are threads.
-# - life thread. sleeps a variable amount of time based on generation bonus. increases tick count (ticks == score).
-# - screen: sleeps 1s per loop. draws interface (including plant). for seeing score/plant change without user input.
-# meanwhile, the main thread handles input and redraws curses as needed.
-
-# affordance index
-# - main screen
-#  navigable menu, plant, score, etc
-# - water
-#  render a visualization of moistness; allow to water
-# - look
-#  print a description of plant with info below rest of UI
-# - garden
-#  runs a paginated view of every plant on the computer below rest of UI. to return to menu navigation must hit q.
-# - visit
-#  runs a prompt underneath UI where you can see who recently visited you and type in a name to visit. must submit the prompt to get back to menu navigation.
-# - instructions
-#  prints some explanatory text below the UI
-# - exit
-#  quits program
-
-# part of the complexity of all this is everything takes place in one curses window; thus, updates must be manually synchronized across the various logical parts of the screen.
-# ideally, multiple windows would be used:
-# - the menu. it doesn't change unless the plant dies OR the plant hits stage 5, then "harvest" is dynamically added.
-# - the plant viewer. this is updated in "real time" as the plant grows.
-# - the status display: score and plant description
-# - the infow window. updated by visit/garden/instructions/look
-
-class DataManager(object):
+class DataManager:
     # handles user data, puts a .botany dir in user's home dir (OSX/Linux)
     # handles shared data with sqlite db
     # TODO: .dat save should only happen on mutation, water, death, exit,
@@ -56,7 +18,9 @@ class DataManager(object):
 
     user_dir = os.path.expanduser("~")
     botany_dir = os.path.join(user_dir,'.botany')
-    game_dir = os.path.dirname(os.path.realpath(__file__))
+
+    game_dir = os.getenv("BOTANY_GAME_DIR") or GAME_DIR
+
     this_user = getpass.getuser()
 
     savefile_name = this_user + '_plant.dat'
@@ -284,20 +248,3 @@ class DataManager(object):
             json.dump(this_harvest, outfile)
 
         return new_file_check
-
-if __name__ == '__main__':
-    my_data = DataManager()
-    # if plant save file exists
-    if my_data.check_plant():
-        my_plant = my_data.load_plant()
-    # otherwise create new plant
-    else:
-        my_plant = Plant(my_data.savefile_path)
-        my_data.data_write_json(my_plant)
-    # my_plant is either a fresh plant or an existing plant at this point
-    my_plant.start_life(my_data)
-
-    ms.main(my_plant, my_data)
-    my_data.save_plant(my_plant)
-    my_data.data_write_json(my_plant)
-    my_data.update_garden_db(my_plant)

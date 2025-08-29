@@ -4,3 +4,6 @@ garden_file.dat
 garden_file.json
 sqlite/
 *.swp
+build
+*.egg-info
+.venv

@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "botany"
+version = "0.0.1"
+requires-python = ">=3"
+authors = [
+  {name = "Jake Funke", email = "jifunks@gmail.com"}
+]
+maintainers = [
+  {name = "Jake Funke", email = "jifunks@gmail.com"}
+]
+description = "A command line, realtime, community plant buddy."
+readme = "README.md"
+license = "ISC"
+license-files = ["LICENSE"]
+keywords = [
+  "plant",
+  "virtual",
+  "garden",
+  "cli",
+  "curses",
+  "pet",
+  "tilde",
+]
+classifiers = [
+  "Programming Language :: Python",
+  "Environment :: Console",
+  "Environment :: Console :: Curses",
+  "Topic :: Games/Entertainment",
+  "Topic :: Games/Entertainment :: Simulation",
+  "Topic :: Multimedia :: Graphics",
+  "Topic :: System :: Shells",
+  "Topic :: Terminals",
+  "Operating System :: POSIX",
+  "Operating System :: Unix",
+]
+
+[project.scripts]
+botany = "botany.botany:main"
+botany-view = "botany.botany_view:main"
+
+[project.urls]
+Homepage = "https://github.com/jifunks/botany"
+Documentation = "https://github.com/jifunks/botany"
+Repository = "https://github.com/jifunks/botany"
+"Bug Tracker" = "https://github.com/jifunks/botany/issues"
+
+[tool.setuptools]
+packages = ["botany"]
+include-package-data = true
+
+[tool.setuptools.package-data]
+botany = ["art/*.txt"]

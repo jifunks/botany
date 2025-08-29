@@ -1,8 +1,8 @@
-#!/usr/bin/env python3
-
+import os
 import datetime
 
-from botany import *
+from botany.plant import Plant
+from botany.data_manager import DataManager
 
 def ascii_render(filename):
     # Prints ASCII art from file at given coordinates
@@ -58,7 +58,7 @@ def draw_plant_ascii(this_plant):
         this_filename = plant_art_list[this_plant.species]+'3.txt'
         ascii_render(this_filename)
 
-if __name__ == '__main__':
+def main():
     my_data = DataManager()
     # if plant save file exists
     if my_data.check_plant():
@@ -68,3 +68,6 @@ if __name__ == '__main__':
         my_plant = Plant(my_data.savefile_path)
         my_data.data_write_json(my_plant)
     draw_plant_ascii(my_plant)
+
+if __name__ == '__main__':
+    main()    

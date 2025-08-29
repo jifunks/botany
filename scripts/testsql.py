@@ -1,6 +1,14 @@
+#!/usr/bin/env python3
+
+import os
 import sqlite3
 
-garden_db_path = "sqlite/garden_db.sqlite"
+from sys import argv
+
+argc = len(argv)
+
+game_dir = "/usr/share/botany"
+garden_db_path = os.path.join(game_dir, 'sqlite/garden_db.sqlite') if argc <= 1 else argv[1]
 
 def init_database():
     #TODO: does this need permissions?

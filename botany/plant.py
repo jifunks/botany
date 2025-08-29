@@ -5,6 +5,9 @@ import threading
 import time
 import uuid
 import getpass
+import sqlite3
+
+from botany.data_manager import DataManager
 
 class Plant:
     # This is your plant!
@@ -198,8 +201,7 @@ class Plant:
         return self.dead
 
     def update_visitor_db(self, visitor_names):
-        game_dir = os.path.dirname(os.path.realpath(__file__))
-        garden_db_path = os.path.join(game_dir, 'sqlite/garden_db.sqlite')
+        garden_db_path = os.path.join(DataManager.garden_db_path)
         conn = sqlite3.connect(garden_db_path)
         for name in (visitor_names):
             c = conn.cursor()

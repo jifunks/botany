@@ -11,11 +11,11 @@ Check in and water your plant every 24h to keep it growing. 5 days without water
 *"We do not 'come into' this world; we come out of it, as leaves from a tree." - Alan Watts*
 
 ## getting started
-botany is designed for unix-based systems. Clone into a local directory using `$ git clone https://github.com/jifunks/botany.git`.
+botany is designed for unix-based systems. Install it with pip using `$ python3 -m pip install git+https://github.com/jifunks/botany`.
 
-Run with `$ python3 botany.py`.
+By default, the game directory path is `/usr/share/botany`. Feel free to use [scripts/pre_build.sh](scripts/pre_build.sh) to modify it, it implies to clone this git repository.
 
-*Note - botany.py must initially be run by the user who cloned/unzipped botany.py - this initializes the shared data file permissions.*
+Run with `$ botany`.
 
 Water your seed to get started. You can come and go as you please and your plant continues to grow.
 

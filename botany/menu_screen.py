@@ -10,13 +10,11 @@ import sqlite3
 import string
 import threading
 import time
-from typing import TYPE_CHECKING
 
-import completer
-from plant import Plant
 
-if TYPE_CHECKING:
-    from botany import DataManager
+from botany import completer
+from botany.plant import Plant
+from botany.data_manager import DataManager
 
 
 class CursedMenu(object):
@@ -638,9 +636,7 @@ class CursedMenu(object):
         return [visitor_line]
 
     def get_weekly_visitors(self):
-        game_dir = os.path.dirname(os.path.realpath(__file__))
-        garden_db_path = os.path.join(game_dir, 'sqlite/garden_db.sqlite')
-        conn = sqlite3.connect(garden_db_path)
+        conn = sqlite3.connect(DataManager.garden_db_path)
         c = conn.cursor()
         c.execute("SELECT * FROM visitors WHERE garden_name = '{}' ORDER BY weekly_visits".format(self.plant.owner))
         visitor_data = c.fetchall()
