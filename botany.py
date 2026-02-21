@@ -163,28 +163,27 @@ class DataManager(object):
         self.init_database()
         self.migrate_database()
         age_formatted = self.plant_age_convert(this_plant)
-        conn = sqlite3.connect(self.garden_db_path)
+        # Add timeout to handle "database is locked" errors
+        conn = sqlite3.connect(self.garden_db_path, timeout=30.0)
         c = conn.cursor()
-        # try to insert or replace
+        # Use parameterized queries to handle special characters and prevent injection
         update_query = """INSERT OR REPLACE INTO garden (
                     plant_id, owner, description, age, score, is_dead
-                    ) VALUES (
-                    '{pid}', '{pown}', '{pdes}', '{page}', {psco}, {pdead}
-                    )
-                    """.format(pid = this_plant.plant_id,
-                            pown = this_plant.owner,
-                            pdes = this_plant.parse_plant(),
-                            page = age_formatted,
-                            psco = str(this_plant.ticks),
-                            pdead = int(this_plant.dead))
-        c.execute(update_query)
+                    ) VALUES (?, ?, ?, ?, ?, ?)"""
+        
+        c.execute(update_query, (
+            this_plant.plant_id,
+            this_plant.owner,
+            this_plant.parse_plant(),
+            age_formatted,
+            this_plant.ticks,
+            int(this_plant.dead)
+        ))
+        
         # clean other instances of user
-        clean_query = """UPDATE garden set is_dead = 1
-                   where owner = '{pown}'
-                   and plant_id <> '{pid}'
-                   """.format(pown = this_plant.owner,
-                              pid = this_plant.plant_id)
-        c.execute(clean_query)
+        clean_query = "UPDATE garden set is_dead = 1 where owner = ? and plant_id <> ?"
+        c.execute(clean_query, (this_plant.owner, this_plant.plant_id))
+        
         conn.commit()
         conn.close()
 

@@ -200,17 +200,19 @@ class Plant:
     def update_visitor_db(self, visitor_names):
         game_dir = os.path.dirname(os.path.realpath(__file__))
         garden_db_path = os.path.join(game_dir, 'sqlite/garden_db.sqlite')
-        conn = sqlite3.connect(garden_db_path)
+        # Add timeout to handle "database is locked" errors
+        conn = sqlite3.connect(garden_db_path, timeout=30.0)
         for name in (visitor_names):
             c = conn.cursor()
-            c.execute("SELECT * FROM visitors WHERE garden_name = '{}' AND visitor_name = '{}' ".format(self.owner, name))
-            data=c.fetchone()
+            # Use parameterized queries to handle special characters and prevent injection
+            c.execute("SELECT * FROM visitors WHERE garden_name = ? AND visitor_name = ?", (self.owner, name))
+            data = c.fetchone()
             if data is None:
-                sql = """ INSERT INTO visitors (garden_name,visitor_name,weekly_visits) VALUES('{}', '{}',1)""".format(self.owner, name)
-                c.execute(sql)
+                sql = "INSERT INTO visitors (garden_name, visitor_name, weekly_visits) VALUES(?, ?, 1)"
+                c.execute(sql, (self.owner, name))
             else:
-                sql = """ UPDATE visitors SET weekly_visits = weekly_visits + 1 WHERE garden_name = '{}' AND visitor_name = '{}'""".format(self.owner, name)
-                c.execute(sql)
+                sql = "UPDATE visitors SET weekly_visits = weekly_visits + 1 WHERE garden_name = ? AND visitor_name = ?"
+                c.execute(sql, (self.owner, name))
         conn.commit()
         conn.close()
 

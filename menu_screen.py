@@ -640,9 +640,11 @@ class CursedMenu(object):
     def get_weekly_visitors(self):
         game_dir = os.path.dirname(os.path.realpath(__file__))
         garden_db_path = os.path.join(game_dir, 'sqlite/garden_db.sqlite')
-        conn = sqlite3.connect(garden_db_path)
+        # Add timeout to handle "database is locked" errors
+        conn = sqlite3.connect(garden_db_path, timeout=30.0)
         c = conn.cursor()
-        c.execute("SELECT * FROM visitors WHERE garden_name = '{}' ORDER BY weekly_visits".format(self.plant.owner))
+        # Use parameterized queries
+        c.execute("SELECT * FROM visitors WHERE garden_name = ? ORDER BY weekly_visits", (self.plant.owner,))
         visitor_data = c.fetchall()
         conn.close()
         visitor_block = ""
@@ -684,7 +686,7 @@ class CursedMenu(object):
                     user_string = completer.complete(direction)
                     self.screen.addstr(ypos, xpos, " " * (self.maxx-xpos-1))
                 elif user_input < 256 and user_input != 10:
-                    if filterfunc(chr(user_input)) or chr(user_input) == '_':
+                    if filterfunc(chr(user_input)) or chr(user_input) in ['_', '-']:
                         user_string += chr(user_input)
                         if completer:
                             completer.update_input(user_string)
