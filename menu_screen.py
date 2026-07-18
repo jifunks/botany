@@ -47,6 +47,7 @@ class CursedMenu(object):
         self.screen.keypad(1)
         self.plant = this_plant
         self.visited_plant = None
+        self.rendered_art = None
         self.user_data = this_data
         self.plant_string = self.plant.parse_plant()
         if self.debug_art:
@@ -223,6 +224,9 @@ class CursedMenu(object):
         return True
 
     def art_render(self, filename, ypos, xpos):
+        if self.rendered_art != filename: # check to prevent flicker
+            self.clear_plant_ascii(ypos, xpos)
+        self.rendered_art = filename # update onscreen art
         if self.debug_art:
             if self.debug_filename.endswith('.ansi') and self.use_color():
                 self.ansi_render(self.debug_filename.split('.')[0], ypos, xpos)
@@ -248,7 +252,6 @@ class CursedMenu(object):
     def draw_plant_ascii(self, this_plant):
         ypos = 0
         xpos = int((self.maxx-37)/2 + 25)
-        self.clear_plant_ascii(ypos, xpos)
         plant_art_list = [
             'poppy',
             'cactus',
