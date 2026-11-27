@@ -5,6 +5,7 @@ import threading
 import time
 import uuid
 import getpass
+import sqlite3
 
 class Plant:
     # This is your plant!
@@ -364,7 +365,10 @@ class Plant:
             if counter % 3 == 0:
                 dm.save_plant(self)
                 dm.data_write_json(self)
-                dm.update_garden_db(self)
+                try:
+                    dm.update_garden_db(self)
+                except Exception:
+                    pass
 
             if counter % 30 == 0:
                 dm.update_garden_json()
